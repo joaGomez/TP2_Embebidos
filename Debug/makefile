@@ -27,7 +27,7 @@ $(wildcard ../makefile.init) \
 $(wildcard ../makefile.targets) \
 
 
-BUILD_ARTIFACT_NAME := PCcommunication
+BUILD_ARTIFACT_NAME := TP2_Embebidos
 BUILD_ARTIFACT_EXTENSION := axf
 BUILD_ARTIFACT_PREFIX :=
 BUILD_ARTIFACT := $(BUILD_ARTIFACT_PREFIX)$(BUILD_ARTIFACT_NAME)$(if $(BUILD_ARTIFACT_EXTENSION),.$(BUILD_ARTIFACT_EXTENSION),)
@@ -39,24 +39,24 @@ all:
 	+@$(MAKE) --no-print-directory main-build && $(MAKE) --no-print-directory post-build
 
 # Main-build Target
-main-build: PCcommunication.axf
+main-build: TP2_Embebidos.axf
 
 # Tool invocations
-PCcommunication.axf: $(OBJS) $(USER_OBJS) makefile $(OPTIONAL_TOOL_DEPS)
+TP2_Embebidos.axf: $(OBJS) $(USER_OBJS) makefile $(OPTIONAL_TOOL_DEPS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: MCU Linker'
-	arm-none-eabi-gcc -nostdlib -Xlinker -Map="PCcommunication.map" -Xlinker --gc-sections -Xlinker -print-memory-usage -Xlinker --sort-section=alignment -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -T PCcommunication_Debug.ld -o "PCcommunication.axf" $(OBJS) $(USER_OBJS) $(LIBS)
+	arm-none-eabi-gcc -nostdlib -Xlinker -Map="TP2_Embebidos.map" -Xlinker --gc-sections -Xlinker -print-memory-usage -Xlinker --sort-section=alignment -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -T TP2_Embebidos_Debug.ld -o "TP2_Embebidos.axf" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
 # Other Targets
 clean:
-	-$(RM) PCcommunication.axf
+	-$(RM) TP2_Embebidos.axf
 	-@echo ' '
 
 post-build:
 	-@echo 'Performing post-build steps'
-	-arm-none-eabi-size "PCcommunication.axf"; # arm-none-eabi-objcopy -v -O binary "PCcommunication.axf" "PCcommunication.bin" ; # checksum -p MK64FN1M0xxx12 -d "PCcommunication.bin";
+	-arm-none-eabi-size "TP2_Embebidos.axf"; # arm-none-eabi-objcopy -v -O binary "TP2_Embebidos.axf" "TP2_Embebidos.bin" ; # checksum -p MK64FN1M0xxx12 -d "TP2_Embebidos.bin";
 	-@echo ' '
 
 .PHONY: all clean dependents main-build post-build

@@ -4,28 +4,13 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
-../source/app/App.c \
-../source/app/display_intensity.c \
-../source/app/id_input.c \
-../source/app/pass_input.c \
-../source/app/user.c \
-../source/app/utils.c 
+../source/app/App.c 
 
 C_DEPS += \
-./source/app/App.d \
-./source/app/display_intensity.d \
-./source/app/id_input.d \
-./source/app/pass_input.d \
-./source/app/user.d \
-./source/app/utils.d 
+./source/app/App.d 
 
 OBJS += \
-./source/app/App.o \
-./source/app/display_intensity.o \
-./source/app/id_input.o \
-./source/app/pass_input.o \
-./source/app/user.o \
-./source/app/utils.o 
+./source/app/App.o 
 
 
 # Each subdirectory must supply rules for building sources it contributes
@@ -40,7 +25,7 @@ source/app/%.o: ../source/app/%.c source/app/subdir.mk
 clean: clean-source-2f-app
 
 clean-source-2f-app:
-	-$(RM) ./source/app/App.d ./source/app/App.o ./source/app/display_intensity.d ./source/app/display_intensity.o ./source/app/id_input.d ./source/app/id_input.o ./source/app/pass_input.d ./source/app/pass_input.o ./source/app/user.d ./source/app/user.o ./source/app/utils.d ./source/app/utils.o
+	-$(RM) ./source/app/App.d ./source/app/App.o
 
 .PHONY: clean-source-2f-app
 

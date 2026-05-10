@@ -1,7 +1,0 @@
-../source/app/action.c:6:6:idCheck	4	static
-../source/app/action.c:11:6:passCheck	4	static
-../source/app/action.c:16:6:openCheck	4	static
-../source/app/action.c:21:6:configCheck	4	static
-../source/app/action.c:26:6:adminCheck	4	static
-../source/app/action.c:31:6:initSystem	8	static
-../source/app/action.c:42:10:inputComposit	24	static

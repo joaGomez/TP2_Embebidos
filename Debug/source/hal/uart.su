@@ -1,6 +1,0 @@
-../SDK/CMSIS/core_cm4.h:1677:22:__NVIC_EnableIRQ	16	static
-../source/hal/uart.c:43:6:UART_Init	8	static
-../source/hal/uart.c:89:6:UART_SetBaudRate	24	static
-../source/hal/uart.c:109:6:UART_Send_Data	16	static
-../source/hal/uart.c:116:15:UART_Recieve_Data	4	static
-../source/hal/uart.c:123:6:UART_SendString	16	static

@@ -1,21 +1,24 @@
 source/app/App.o source/app/App.d: ../source/app/App.c \
- ../source/app/display_intensity.h ../source/hal/wheel.h \
- ../source/app/id_input.h ../source/hal/display.h \
- ../source/app/pass_input.h ../source/app/user.h ../source/app/utils.h \
- ../source/hal/board.h ../source/mcal/gpio.h ../source/hal/card.h \
- ../source/hal/leds.h ../source/hal/system.h ../source/hal/timers.h \
- ../source/hal/uart.h
-../source/app/display_intensity.h:
-../source/hal/wheel.h:
-../source/app/id_input.h:
-../source/hal/display.h:
-../source/app/pass_input.h:
-../source/app/user.h:
-../source/app/utils.h:
+ ../source/hal/board.h ../source/mcal/gpio.h ../source/hal/leds.h \
+ ../source/hal/system.h ../source/hal/timers.h ../source/mcal/uart.h \
+ ../SDK/startup/hardware.h ../SDK/CMSIS/fsl_device_registers.h \
+ ../SDK/CMSIS/MK64F12.h ../SDK/CMSIS/core_cm4.h \
+ ../SDK/CMSIS/cmsis_version.h ../SDK/CMSIS/cmsis_compiler.h \
+ ../SDK/CMSIS/cmsis_gcc.h ../SDK/CMSIS/system_MK64F12.h \
+ ../SDK/CMSIS/MK64F12_features.h ../SDK/CMSIS/core_cm4.h
 ../source/hal/board.h:
 ../source/mcal/gpio.h:
-../source/hal/card.h:
 ../source/hal/leds.h:
 ../source/hal/system.h:
 ../source/hal/timers.h:
-../source/hal/uart.h:
+../source/mcal/uart.h:
+../SDK/startup/hardware.h:
+../SDK/CMSIS/fsl_device_registers.h:
+../SDK/CMSIS/MK64F12.h:
+../SDK/CMSIS/core_cm4.h:
+../SDK/CMSIS/cmsis_version.h:
+../SDK/CMSIS/cmsis_compiler.h:
+../SDK/CMSIS/cmsis_gcc.h:
+../SDK/CMSIS/system_MK64F12.h:
+../SDK/CMSIS/MK64F12_features.h:
+../SDK/CMSIS/core_cm4.h:

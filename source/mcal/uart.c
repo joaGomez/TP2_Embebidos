@@ -11,6 +11,17 @@
 void UART_SetBaudRate (UART_Type *uart, uint32_t baudrate);
 void UART_Send_Data(unsigned char tx_data);
 
+#define BUF_SIZE 128
+
+typedef struct {
+    uint8_t data[BUF_SIZE];
+    volatile uint16_t head; // Índice de escritura
+    volatile uint16_t tail; // Índice de lectura
+} RingBuffer_t;
+
+RingBuffer_t rx_buffer = {{0}, 0, 0};
+RingBuffer_t tx_buffer = {{0}, 0, 0};
+
 
 typedef enum
 {
@@ -42,47 +53,46 @@ typedef enum
 
 void UART_Init (void)
 {
+    // Habilitar Clocks de Puertos y Periféricos
+    // Cualquier acceso a bus con clock deshabilitado genera error termination.
+    SIM->SCGC5 |= SIM_SCGC5_PORTB_MASK;
 
-// Note: 5.6 Clock Gating page 192
-// Any bus access to a peripheral that has its clock disabled generates an error termination.
-	    SIM->SCGC5 |= SIM_SCGC5_PORTB_MASK;
+    SIM->SCGC4 |= SIM_SCGC4_UART0_MASK;
+    SIM->SCGC4 |= SIM_SCGC4_UART1_MASK;
 
-	    SIM->SCGC4 |= SIM_SCGC4_UART0_MASK;
-		SIM->SCGC4 |= SIM_SCGC4_UART1_MASK;
-		SIM->SCGC4 |= SIM_SCGC4_UART2_MASK;
-		SIM->SCGC4 |= SIM_SCGC4_UART3_MASK;
-		SIM->SCGC1 |= SIM_SCGC1_UART4_MASK;
-		SIM->SCGC1 |= SIM_SCGC1_UART5_MASK;
+    // Configuración de Pines (Mux Alt3 para UART0)
+    PORTB->PCR[UART0_TX_PIN] = 0x0;
+    PORTB->PCR[UART0_TX_PIN] |= PORT_PCR_MUX(PORT_mAlt3);
+    PORTB->PCR[UART0_TX_PIN] |= PORT_PCR_IRQC(PORT_eDisabled);
 
-		NVIC_EnableIRQ(UART0_RX_TX_IRQn);
-		NVIC_EnableIRQ(UART1_RX_TX_IRQn);
-		NVIC_EnableIRQ(UART2_RX_TX_IRQn);
-		NVIC_EnableIRQ(UART3_RX_TX_IRQn);
-		NVIC_EnableIRQ(UART4_RX_TX_IRQn);
-		NVIC_EnableIRQ(UART5_RX_TX_IRQn);
+    PORTB->PCR[UART0_RX_PIN] = 0x0;
+    PORTB->PCR[UART0_RX_PIN] |= PORT_PCR_MUX(PORT_mAlt3);
+    PORTB->PCR[UART0_RX_PIN] |= PORT_PCR_IRQC(PORT_eDisabled);
 
-		//UART0 Set UART Speed
+    // Desactivar Transmisor y Receptor para configurar parámetros críticos
+    UART0->C2 &= ~(UART_C2_TE_MASK | UART_C2_RE_MASK);
 
-		UART_SetBaudRate(UART0, UART_HAL_DEFAULT_BAUDRATE);
+    // Configurar Baudrate
+    UART_SetBaudRate(UART0, UART_HAL_DEFAULT_BAUDRATE);
 
-		//Configure UART0 TX and RX PINS
+    // CONFIGURACIÓN DE FIFO
+    // Habilitar FIFOs de Transmisión (TXFE) y Recepción (RXFE)
+    UART0->PFIFO |= (UART_PFIFO_TXFE_MASK | UART_PFIFO_RXFE_MASK);
 
-		PORTB->PCR[UART0_TX_PIN]=0x0; //Clear all bits
-		PORTB->PCR[UART0_TX_PIN]|=PORT_PCR_MUX(PORT_mAlt3); 	 //Set MUX to UART0
-		PORTB->PCR[UART0_TX_PIN]|=PORT_PCR_IRQC(PORT_eDisabled); //Disable interrupts
-//----------------------------------------------------------------------------------
-		PORTB->PCR[UART0_RX_PIN]=0x0; //Clear all bits
-		PORTB->PCR[UART0_RX_PIN]|=PORT_PCR_MUX(PORT_mAlt3); 	 //Set MUX to UART0
-		PORTB->PCR[UART0_RX_PIN]|=PORT_PCR_IRQC(PORT_eDisabled); //Disable interrupts
+    // Watermarks:
+    UART0->RWFIFO = 4; // Interrumpir cuando haya 4 bytes acumulados en RX
+    UART0->TWFIFO = 2; // Interrumpir cuando queden 2 espacios o menos en TX
 
+    // Limpiar (Flush) FIFOs para descartar basura previa
+    UART0->CFIFO |= (UART_CFIFO_TXFLUSH_MASK | UART_CFIFO_RXFLUSH_MASK);
 
-	//UART0 Baudrate Setup
+    // Habilitar Interrupciones en el NVIC
+    NVIC_EnableIRQ(UART0_RX_TX_IRQn);
+    NVIC_EnableIRQ(UART1_RX_TX_IRQn);
 
-	UART_SetBaudRate (UART0, 9600);
-
-	//Enable UART0 Xmiter and Rcvr
-
-	UART0->C2=UART_C2_TE_MASK | UART_C2_RE_MASK;
+    // Habilitar UART y activar Interrupción de Recepción (RIE)
+    // La interrupción de Transmisión (TIE) se activará solo cuando tengamos datos para enviar.
+    UART0->C2 |= (UART_C2_TE_MASK | UART_C2_RE_MASK | UART_C2_RIE_MASK);
 }
 
 
@@ -106,18 +116,25 @@ void UART_SetBaudRate (UART_Type *uart, uint32_t baudrate)
 
 
 
-void UART_Send_Data(unsigned char tx_data)
-{
-	while(((UART0->S1)& UART_S1_TDRE_MASK) ==0);
+// Envía datos: Los pone en el buffer de RAM y activa la interrupción
+void UART_Send_Data(uint8_t data) {
+    uint16_t next = (tx_buffer.head + 1) % BUF_SIZE;
+    while (next == tx_buffer.tail); // Esperar solo si el buffer de RAM está lleno
 
-	UART0->D = tx_data;
+    tx_buffer.data[tx_buffer.head] = data;
+    tx_buffer.head = next;
+
+    // IMPORTANTE: Activar interrupción de TX para que el ISR empiece a vaciar la RAM al FIFO
+    UART0->C2 |= UART_C2_TIE_MASK;
 }
 
-unsigned char UART_Recieve_Data(void)
-{
-	while(((UART0->S1)& UART_S1_RDRF_MASK) ==0);
+// Recibe datos: Los saca del buffer de RAM
+uint8_t UART_Receive_Data(void) {
+    while (rx_buffer.head == rx_buffer.tail); // Esperar a que llegue algo a la RAM
 
-	return(UART0->D);
+    uint8_t data = rx_buffer.data[rx_buffer.tail];
+    rx_buffer.tail = (rx_buffer.tail + 1) % BUF_SIZE;
+    return data;
 }
 
 void UART_SendString(char* str) {
@@ -127,3 +144,36 @@ void UART_SendString(char* str) {
     }
 }
 
+
+void UART0_RX_TX_IRQHandler(void) {
+    uint8_t s1 = UART0->S1;
+
+    // CASO 1: Recepción (El FIFO de RX alcanzó el Watermark)
+    if (s1 & UART_S1_RDRF_MASK) {
+        // Mientras haya datos en el FIFO de hardware, moverlos a RAM
+        while (UART0->RCFIFO > 0) {
+            uint8_t data = UART0->D;
+            uint16_t next = (rx_buffer.head + 1) % BUF_SIZE;
+            if (next != rx_buffer.tail) { // Si hay espacio en RAM
+                rx_buffer.data[rx_buffer.head] = data;
+                rx_buffer.head = next;
+            }
+        }
+    }
+
+    // CASO 2: Transmisión (El FIFO de TX tiene espacio)
+    if (UART0->C2 & UART_C2_TIE_MASK) { // Si la interrupción de TX está habilitada
+        if (s1 & UART_S1_TDRE_MASK) {
+            // Llenar el FIFO de hardware con lo que haya en la RAM
+            while (UART0->TCFIFO < 8 && tx_buffer.head != tx_buffer.tail) {
+                UART0->D = tx_buffer.data[tx_buffer.tail];
+                tx_buffer.tail = (tx_buffer.tail + 1) % BUF_SIZE;
+            }
+
+            // Si ya no hay nada más que enviar en la RAM, apagar interrupción de TX
+            if (tx_buffer.head == tx_buffer.tail) {
+                UART0->C2 &= ~UART_C2_TIE_MASK;
+            }
+        }
+    }
+}

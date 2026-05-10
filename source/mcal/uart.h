@@ -34,7 +34,7 @@
  ******************************************************************************/
 
 void UART_Init(void);
-unsigned char UART_Recieve_Data(void);
+unsigned char UART_Receive_Data(void);
 void UART_SendString(char* str);
 
 

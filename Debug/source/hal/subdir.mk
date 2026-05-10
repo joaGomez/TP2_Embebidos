@@ -5,36 +5,21 @@
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
 ../source/hal/IRQN_Ports.c \
-../source/hal/card.c \
-../source/hal/display.c \
 ../source/hal/leds.c \
-../source/hal/shift.c \
 ../source/hal/system.c \
-../source/hal/timers.c \
-../source/hal/uart.c \
-../source/hal/wheel.c 
+../source/hal/timers.c 
 
 C_DEPS += \
 ./source/hal/IRQN_Ports.d \
-./source/hal/card.d \
-./source/hal/display.d \
 ./source/hal/leds.d \
-./source/hal/shift.d \
 ./source/hal/system.d \
-./source/hal/timers.d \
-./source/hal/uart.d \
-./source/hal/wheel.d 
+./source/hal/timers.d 
 
 OBJS += \
 ./source/hal/IRQN_Ports.o \
-./source/hal/card.o \
-./source/hal/display.o \
 ./source/hal/leds.o \
-./source/hal/shift.o \
 ./source/hal/system.o \
-./source/hal/timers.o \
-./source/hal/uart.o \
-./source/hal/wheel.o 
+./source/hal/timers.o 
 
 
 # Each subdirectory must supply rules for building sources it contributes
@@ -49,7 +34,7 @@ source/hal/%.o: ../source/hal/%.c source/hal/subdir.mk
 clean: clean-source-2f-hal
 
 clean-source-2f-hal:
-	-$(RM) ./source/hal/IRQN_Ports.d ./source/hal/IRQN_Ports.o ./source/hal/card.d ./source/hal/card.o ./source/hal/display.d ./source/hal/display.o ./source/hal/leds.d ./source/hal/leds.o ./source/hal/shift.d ./source/hal/shift.o ./source/hal/system.d ./source/hal/system.o ./source/hal/timers.d ./source/hal/timers.o ./source/hal/uart.d ./source/hal/uart.o ./source/hal/wheel.d ./source/hal/wheel.o
+	-$(RM) ./source/hal/IRQN_Ports.d ./source/hal/IRQN_Ports.o ./source/hal/leds.d ./source/hal/leds.o ./source/hal/system.d ./source/hal/system.o ./source/hal/timers.d ./source/hal/timers.o
 
 .PHONY: clean-source-2f-hal
 

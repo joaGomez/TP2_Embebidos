@@ -5,15 +5,18 @@
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
 ../source/mcal/SysTick.c \
-../source/mcal/gpio.c 
+../source/mcal/gpio.c \
+../source/mcal/uart.c 
 
 C_DEPS += \
 ./source/mcal/SysTick.d \
-./source/mcal/gpio.d 
+./source/mcal/gpio.d \
+./source/mcal/uart.d 
 
 OBJS += \
 ./source/mcal/SysTick.o \
-./source/mcal/gpio.o 
+./source/mcal/gpio.o \
+./source/mcal/uart.o 
 
 
 # Each subdirectory must supply rules for building sources it contributes
@@ -28,7 +31,7 @@ source/mcal/%.o: ../source/mcal/%.c source/mcal/subdir.mk
 clean: clean-source-2f-mcal
 
 clean-source-2f-mcal:
-	-$(RM) ./source/mcal/SysTick.d ./source/mcal/SysTick.o ./source/mcal/gpio.d ./source/mcal/gpio.o
+	-$(RM) ./source/mcal/SysTick.d ./source/mcal/SysTick.o ./source/mcal/gpio.d ./source/mcal/gpio.o ./source/mcal/uart.d ./source/mcal/uart.o
 
 .PHONY: clean-source-2f-mcal
 

@@ -1,0 +1,3 @@
+../source/hal/wheel.c:61:6:wheelInit	8	static
+../source/hal/wheel.c:82:6:wheelReadGPIO	16	static
+../source/hal/wheel.c:100:15:readWheel	16	static

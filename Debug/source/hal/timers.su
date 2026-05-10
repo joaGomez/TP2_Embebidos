@@ -1,0 +1,5 @@
+../source/hal/timers.c:9:6:initTimers	8	static
+../source/hal/timers.c:13:9:timerCreate	40	static
+../source/hal/timers.c:17:6:timerStart	16	static
+../source/hal/timers.c:22:6:timerFinished	32	static
+../source/hal/timers.c:26:13:updateTick	4	static

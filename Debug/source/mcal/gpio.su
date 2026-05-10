@@ -1,0 +1,9 @@
+../source/mcal/gpio.c:24:6:gpioInit	24	static
+../source/mcal/gpio.c:59:6:gpioMode	24	static
+../source/mcal/gpio.c:75:6:gpioWrite	24	static
+../source/mcal/gpio.c:93:6:gpioToggle	24	static
+../source/mcal/gpio.c:106:6:gpioRead	24	static
+../source/mcal/gpio.c:118:6:fallingEdgeIRQC	24	static
+../source/mcal/gpio.c:126:6:risingEdgeIRQC	24	static
+../source/mcal/gpio.c:138:6:gpioPullUp	24	static
+../source/mcal/gpio.c:147:6:cleanFlags	24	static

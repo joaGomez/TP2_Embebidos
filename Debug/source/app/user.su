@@ -1,0 +1,3 @@
+../source/app/user.c:24:6:changePass	24	static
+../source/app/user.c:33:6:searchId	32	static
+../source/app/user.c:54:6:checkPass	40	static

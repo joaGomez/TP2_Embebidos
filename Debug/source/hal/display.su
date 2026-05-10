@@ -1,0 +1,13 @@
+../source/hal/display.c:40:6:initDisplay	8	static
+../source/hal/display.c:47:9:getDutyPercentage	4	static
+../source/hal/display.c:50:6:setDutyPercentage	16	static
+../source/hal/display.c:54:6:turnOnDisplayLed	16	static
+../source/hal/display.c:59:6:turnOffDisplayLed	16	static
+../source/hal/display.c:64:6:enableDot	16	static
+../source/hal/display.c:72:6:writeSegments	16	static
+../source/hal/display.c:94:6:writeCharacter	16	static
+../source/hal/display.c:100:6:writeString	24	static
+../source/hal/display.c:116:6:cleanDisplay	16	static
+../source/hal/display.c:128:13:updateDisplay	16	static
+../source/hal/display.c:146:13:updateDisplayRegisters	24	static
+../source/hal/display.c:155:13:updateSlideAndBlink	16	static

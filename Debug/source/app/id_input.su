@@ -1,0 +1,5 @@
+../source/app/id_input.c:22:6:initIdInput	32	static
+../source/app/id_input.c:28:14:handleIdInput	24	static
+../source/app/id_input.c:53:13:handleIdEdit	24	static
+../source/app/id_input.c:80:13:handleIdSelectDigit	24	static
+../source/app/id_input.c:98:13:updateDisplay	16	static

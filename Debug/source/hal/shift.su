@@ -1,0 +1,5 @@
+../source/hal/shift.c:12:10:shiftRead	4	static
+../source/hal/shift.c:16:6:shiftWriteWord	16	static
+../source/hal/shift.c:21:6:shiftWriteBit	16	static
+../source/hal/shift.c:27:6:shiftOutUpdate	16	static
+../source/hal/shift.c:42:6:shiftInit	8	static

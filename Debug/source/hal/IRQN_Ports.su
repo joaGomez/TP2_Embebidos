@@ -1,0 +1,7 @@
+../SDK/CMSIS/core_cm4.h:1677:22:__NVIC_EnableIRQ	16	static
+../SDK/CMSIS/core_cm4.h:1766:22:__NVIC_ClearPendingIRQ	16	static
+../SDK/CMSIS/core_cm4.h:1805:22:__NVIC_SetPriority	16	static
+../source/hal/IRQN_Ports.c:12:6:toggleInterruptFlag	16	static
+../source/hal/IRQN_Ports.c:17:6:PORTC_IRQHandler	16	static
+../source/hal/IRQN_Ports.c:30:6:setCallbacks	16	static
+../source/hal/IRQN_Ports.c:36:6:init_nvic	16	static

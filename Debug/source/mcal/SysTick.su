@@ -1,0 +1,3 @@
+../source/mcal/SysTick.c:20:9:SysTick_Handler	24	static
+../source/mcal/SysTick.c:33:6:pisr_register	16	static
+../source/mcal/SysTick.c:45:6:SysTick_Init	24	static

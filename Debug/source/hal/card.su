@@ -1,0 +1,12 @@
+../source/hal/card.c:58:6:cardInit	8	static
+../source/hal/card.c:103:6:timerForTimeout	8	static
+../source/hal/card.c:114:6:cardHandler	16	static
+../source/hal/card.c:252:13:processIdData	24	static
+../source/hal/card.c:337:16:get_char_from_bits	24	static
+../source/hal/card.c:349:16:make_char	16	static
+../source/hal/card.c:361:13:cleanBufferAndId	16	static
+../source/hal/card.c:371:17:calculateIdNumber	16	static
+../source/hal/card.c:392:13:checkTimeout	8	static
+../source/hal/card.c:421:6:cardAvailable	4	static
+../source/hal/card.c:428:6:processCardData	8	static
+../source/hal/card.c:446:10:cardRead	24	static

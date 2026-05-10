@@ -1,0 +1,5 @@
+../source/app/pass_input.c:23:6:initPassInput	24	static
+../source/app/pass_input.c:30:16:handlePassInput	32	static
+../source/app/pass_input.c:53:13:handlePassEdit	32	static
+../source/app/pass_input.c:93:13:handlePassSelectDigit	24	static
+../source/app/pass_input.c:113:13:updateDisplay	24	static

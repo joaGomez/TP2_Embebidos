@@ -1,0 +1,4 @@
+../source/hal/leds.c:6:6:ledsInit	16	static
+../source/hal/leds.c:38:6:ledOn	16	static
+../source/hal/leds.c:82:6:ledOff	16	static
+../source/hal/leds.c:118:6:ledToggle	16	static

@@ -57,6 +57,16 @@
 
 #define PIN_INTERRUPTION_FLAG PORTNUM2PIN(PB,18)
 
+/****** ACCELEROMETER defines **************************************************/
+#define ACCEL_ADDR          0x1D 	// Dirección I2C del sensor en la FRDM-K64F
+
+// FXOS8700CQ REGISTERS
+#define REG_STATUS          0x00
+#define REG_OUT_X_MSB       0x01
+#define REG_WHO_AM_I        0x0D
+#define REG_XYZ_DATA_CFG    0x0E
+#define REG_CTRL_REG1       0x2A
+
 /*******************************************************************************
  ******************************************************************************/
 

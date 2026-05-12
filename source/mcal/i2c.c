@@ -1,124 +1,146 @@
 #include "i2c.h"
 #include "hardware.h"
 #include "MK64F12.h"
+#include "gpio.h"
+
+#define PIN_I2C0_SDA    PORTNUM2PIN(PE, 25)
+#define PIN_I2C0_SCL    PORTNUM2PIN(PE, 24)
 
 
-/************************************************
- * 			PRIVATE FUNCTIONS
- ***********************************************/
 
-static int I2C_Wait(void) {
-    uint32_t timeout = 10000;
+typedef enum {
+    I2C_IDLE,
+	I2C_WRITING_DATA,
+    I2C_WRITING_REG_ADDR,
+    I2C_RESTARTING,
+    I2C_DUMMY_READ,
+    I2C_READING_DATA
+} i2c_state_t;
 
-    // Esperar bandera de interrupción
-    while (!(I2C0->S & I2C_S_IICIF_MASK) && timeout > 0) {
-        timeout--;
-    }
+static volatile i2c_state_t g_state = I2C_IDLE;
+static volatile uint8_t g_dataToWrite;
+static volatile uint8_t g_slaveAddr;
+static volatile uint8_t g_regAddr;
+static volatile uint8_t *g_buffer;
+static volatile uint8_t g_length;
+static volatile uint8_t g_index;
+static volatile bool g_busy = false;
 
-    if (timeout == 0) return -1; // Error por tiempo agotado
-
-    I2C0->S |= I2C_S_IICIF_MASK; // Limpiar bandera SIEMPRE
-
-    // Verificar si el esclavo nos dio el ACK
-    // Si RXAK es 1, el esclavo NO respondió (NACK)
-    if (I2C0->S & I2C_S_RXAK_MASK) {
-        return -1; // Error: Nadie respondió
-    }
-
-    return 0;
+static void I2C_Wait_Blocking(void) {
+    uint32_t timeout = 100000;
+    while (!(I2C0->S & I2C_S_IICIF_MASK) && timeout > 0) timeout--;
+    I2C0->S |= I2C_S_IICIF_MASK; 	// Limpiar flag
 }
 
-static void I2C_Start(void) {
-    // Esperar a que el bus esté libre antes de iniciar
-    while (I2C0->S & I2C_S_BUSY_MASK);
+// Esta es la función que usa tu Accel_Init
+void I2C_WriteByte(uint8_t slaveAddr, uint8_t regAddr, uint8_t data) {
+    g_busy = true; // Bloqueo g_busy
 
-    I2C0->C1 |= I2C_C1_MST_MASK;
-    I2C0->C1 |= I2C_C1_TX_MASK;
+    I2C0->C1 |= I2C_C1_MST_MASK | I2C_C1_TX_MASK; // START
+    I2C0->D = (slaveAddr << 1);
+    I2C_Wait_Blocking();
+
+    I2C0->D = regAddr;
+    I2C_Wait_Blocking();
+
+    I2C0->D = data;
+    I2C_Wait_Blocking();
+
+    I2C0->C1 &= ~I2C_C1_MST_MASK; // STOP
+    I2C0->C1 &= ~I2C_C1_TX_MASK;
+
+    g_busy = false;		// Actualizo
+
+    // Delay para el sensor
+    for(volatile int i = 0; i < 2000; i++);
 }
 
-static void I2C_Stop(void) {
-    I2C0->C1 &= ~I2C_C1_MST_MASK; // Genera STOP
-    I2C0->C1 &= ~I2C_C1_TX_MASK;  // Pone en modo escucha
-
-    // ESPERA CRÍTICA: Esperar a que el hardware confirme que el bus está libre
-    uint32_t timeout = 1000;
-    while ((I2C0->S & I2C_S_BUSY_MASK) && timeout > 0) {
-        timeout--;
-    }
-}
 
 
-/************************************************
- * 			PUBLIC FUNCTIONS
- ***********************************************/
 
 void I2C_Init(void) {
-    SIM->SCGC5 |= SIM_SCGC5_PORTE_MASK;    // Clock Puerto E
-    SIM->SCGC4 |= SIM_SCGC4_I2C0_MASK;     // Clock I2C0
 
-    PORTE->PCR[24] = PORT_PCR_MUX(5);      // PTE24 -> I2C0_SCL
-    PORTE->PCR[25] = PORT_PCR_MUX(5);      // PTE25 -> I2C0_SDA
+	gpioInit(PIN_I2C0_SDA, PORT_mAlt5);
+	gpioInit(PIN_I2C0_SCL, PORT_mAlt5);
 
-    I2C0->F = 0x1F;                        // Configuración de frecuencia (~100kHz)
-    I2C0->C1 = I2C_C1_IICEN_MASK;          // Habilitar I2C0
-}
+    SIM->SCGC4 |= SIM_SCGC4_I2C0_MASK;
+    I2C0->F = 0x1F; 						// Frecuencia de I2C
 
-void I2C_WriteByte(uint8_t devAddr, uint8_t regAddr, uint8_t data) {
-    I2C_Start();
+    I2C0->C1 = I2C_C1_IICEN_MASK | I2C_C1_IICIE_MASK;	// Módulo I2C + Interrupciones
 
-    I2C0->D = (devAddr << 1);              // Dirección + Write (0)
-    I2C_Wait();
-
-    I2C0->D = regAddr;                     // Registro a escribir
-    I2C_Wait();
-
-    I2C0->D = data;                        // Dato a enviar
-    I2C_Wait();
-
-    I2C_Stop();
+    NVIC_EnableIRQ(I2C0_IRQn);
 }
 
 
-void I2C_ReadRegisters(uint8_t slaveAddr, uint8_t startReg, uint8_t *buffer, uint8_t length) {
-	I2C_Start();
-	I2C0->D = (slaveAddr << 1);    // Dirección + Write (0)
-	I2C_Wait();
+bool I2C_ReadRegisters(uint8_t slaveAddr, uint8_t startReg, uint8_t *buffer, uint8_t length) {
+    if (g_busy) return false; // El bus está ocupado con otra tarea
 
-	I2C0->D = startReg;            // Registro inicial (ej: 0x01)
-	I2C_Wait();
+    // Actualizo las variables globales del protocolo
+    g_slaveAddr = slaveAddr;
+    g_regAddr = startReg;
+    g_buffer = buffer;
+    g_length = length;
+    g_index = 0;
+    g_busy = true;
+    g_state = I2C_WRITING_REG_ADDR;
 
-	// 2. Fase de Reinicio (Repeated Start) para cambiar a modo Lectura
-	I2C0->C1 |= I2C_C1_RSTA_MASK;  // Repeated Start
-	I2C0->D = (slaveAddr << 1) | 1; // Dirección + Read (1)
-	I2C_Wait();
+    // Inicio bus
+    I2C0->C1 |= I2C_C1_MST_MASK | I2C_C1_TX_MASK;
+    I2C0->D = (slaveAddr << 1); 	// Envía Dirección + W
 
-	// 3. Preparar el cambio a modo Recepción
-	I2C0->C1 &= ~I2C_C1_TX_MASK;   // TX=0 (Recibir)
-	I2C0->C1 &= ~I2C_C1_TXAK_MASK; // Asegurar que mandamos ACK al inicio
-
-	// Dummy Read: El primer acceso a D dispara el reloj para traer el primer byte real
-	volatile uint8_t dummy = I2C0->D;
-	I2C_Wait();
-
-	// 4. EL BUCLE QUE PREGUNTASTE:
-	for (int i = 0; i < length; i++) {
-
-		if (i == (length - 2)) {
-			// Penúltimo byte: Configurar NACK para el final
-			I2C0->C1 |= I2C_C1_TXAK_MASK;
-		}
-
-		if (i == (length - 1)) {
-			// Último byte: Generar STOP antes de la última lectura de D
-			I2C_Stop();
-		}
-
-		buffer[i] = I2C0->D; // Capturar el byte que ya llegó al registro
-
-		if (i < (length - 1)) {
-			// No esperamos en el último porque el STOP ya cerró el bus
-			I2C_Wait();
-		}
-	}
+    return true;
 }
 
+bool I2C_IsBusy(void) {
+    return g_busy;
+}
+
+void I2C0_IRQHandler(void) {
+    I2C0->S |= I2C_S_IICIF_MASK;		// Limpio el flag
+
+    switch (g_state) {
+        case I2C_WRITING_REG_ADDR:
+            I2C0->D = g_regAddr;           // Enviar dirección del registro
+            g_state = I2C_RESTARTING;
+            break;
+
+        case I2C_RESTARTING:
+            I2C0->C1 |= I2C_C1_RSTA_MASK;  				// Repeated Start
+            I2C0->D = (g_slaveAddr << 1) | 1; 			// Dirección + Read
+            g_state = I2C_DUMMY_READ;
+            break;
+
+        case I2C_DUMMY_READ:
+            I2C0->C1 &= ~I2C_C1_TX_MASK;   				// Cambiar a modo Recepción
+
+            // Si solo pedimos 1 byte, preparar NACK ya mismo
+            if (g_length == 1) I2C0->C1 |= I2C_C1_TXAK_MASK;
+            else I2C0->C1 &= ~I2C_C1_TXAK_MASK;
+
+            volatile uint8_t dummy = I2C0->D; // Trigger del primer byte real
+            g_state = I2C_READING_DATA;
+            break;
+
+        case I2C_READING_DATA:
+            // Penúltimo byte
+            if (g_index == g_length - 2) {
+                I2C0->C1 |= I2C_C1_TXAK_MASK; // Próximo byte será NACK
+            }
+
+            // Último byte
+            if (g_index == g_length - 1) {
+                I2C0->C1 &= ~I2C_C1_MST_MASK; // STOP
+                I2C0->C1 &= ~I2C_C1_TX_MASK;
+                g_buffer[g_index] = I2C0->D;  // Guardar último dato
+                g_busy = false;               // Liberar driver
+                g_state = I2C_IDLE;
+            } else {
+                g_buffer[g_index++] = I2C0->D; // Guardar y disparar siguiente reloj
+            }
+            break;
+
+        default:
+            g_busy = false;
+            break;
+    }
+}

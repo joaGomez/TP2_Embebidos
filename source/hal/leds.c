@@ -5,7 +5,7 @@
 // returns NULL if correct
 bool ledsInit(uint8_t color)
 {
-	if(gpioInit(PIN_LED_RED))
+	if(gpioInit(PIN_LED_RED, PORT_mGPIO))
 	{
 		gpioMode(PIN_LED_RED, OUTPUT);
 		gpioWrite(PIN_LED_RED, HIGH);
@@ -14,7 +14,7 @@ bool ledsInit(uint8_t color)
 	{
 		return 1;
 	}
-	if (gpioInit(PIN_LED_BLUE))
+	if (gpioInit(PIN_LED_BLUE, PORT_mGPIO))
 	{
 		gpioMode(PIN_LED_BLUE, OUTPUT);
 		gpioWrite(PIN_LED_BLUE, HIGH);
@@ -23,7 +23,7 @@ bool ledsInit(uint8_t color)
 	{
 		return 1;
 	}
-	if (gpioInit(PIN_LED_GREEN))
+	if (gpioInit(PIN_LED_GREEN, PORT_mGPIO))
 	{
 		gpioMode(PIN_LED_GREEN, OUTPUT);
 		gpioWrite(PIN_LED_GREEN, HIGH);

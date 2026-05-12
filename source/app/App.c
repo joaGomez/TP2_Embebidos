@@ -17,7 +17,7 @@
 
 #include "mcal/uart.h"
 #include "hardware.h"
-#include "mcal/i2c.h"
+
 
 
 
@@ -35,13 +35,15 @@ void int_to_ascii(int n, char *s);
                         GLOBAL FUNCTION DEFINITIONS
  *******************************************************************************
  ******************************************************************************/
-AccelData_t misEjes;
-char buffer_texto[64];  // Buffer para formatear el string de salida
+AccelData_t   rawValues;   // Para X, Y, Z en g's
+AccelAngles_t angles;      // Para Rolido y Cabeceo en grados
+
+
+char val_ascii[12];        // Buffer para conversión numérica
 
 
 
 void App_Init(void) {
-	I2C_Init();
 	Accel_Init();
 	UART_Init();
 	__enable_irq();
@@ -83,33 +85,40 @@ void App_Run(void) {
 	 *
 	 ************************************/
 
-	Accel_ReadData(&misEjes);		// Lectura de los datos acelerometro
+	if (Accel_StartCapture()) {
 
-	char val_ascii[12]; // Buffer temporal para un solo número
+		// Mientras esto ocurre, las interrupciones llenan el buffer en background
+		while (!Accel_IsDataReady()) {
 
-	// --- PROCESAMIENTO EJE X ---
-	UART_SendString("Eje X: ");
-	int_to_ascii((int)misEjes.x, val_ascii);
-	UART_SendString(val_ascii);
-	UART_SendString(" | ");
 
-	// --- PROCESAMIENTO EJE Y ---
-	UART_SendString("Eje Y: ");
-	int_to_ascii((int)misEjes.y, val_ascii);
-	UART_SendString(val_ascii);
-	UART_SendString(" | ");
 
-	// --- PROCESAMIENTO EJE Z ---
-	UART_SendString("Eje Z: ");
-	int_to_ascii((int)misEjes.z, val_ascii);
-	UART_SendString(val_ascii);
+			//	Código en paralelo
 
-	// --- NUEVA LINEA ---
-	UART_SendString("\r\n");
 
-	// Delay visual
-	//for(volatile int i = 0; i < 20000; i++);
 
+		}
+
+		Accel_GetProcessedData(&rawValues);
+		Accel_CalculateAngles(&rawValues, &angles);
+
+		// --- IMPRIMIR ROLIDO ---
+		UART_SendString("Rolido: ");
+		int_to_ascii((int)angles.roll, val_ascii);
+		UART_SendString(val_ascii);
+		UART_SendString(" deg | ");
+
+		// --- IMPRIMIR CABECEO ---
+		UART_SendString("Cabeceo: ");
+		int_to_ascii((int)angles.pitch, val_ascii);
+		UART_SendString(val_ascii);
+		UART_SendString(" deg");
+
+		// --- NUEVA LINEA ---
+		UART_SendString("\r\n");
+		}
+
+		// Delay para que la terminal sea legible
+		for(volatile int i = 0; i < 5000000; i++);
 
 }
 

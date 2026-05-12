@@ -34,7 +34,7 @@ void setCallbacks(uint8_t port, pCallBack_t pCallBack, uint8_t interruptNum)
 
 
 void init_nvic(uint8_t port) {
-	if(!gpioInit(PIN_INTERRUPTION_FLAG)) {
+	if(!gpioInit(PIN_INTERRUPTION_FLAG, PORT_mGPIO)) {
 		return;
 	}
 	gpioMode(PIN_INTERRUPTION_FLAG, OUTPUT);

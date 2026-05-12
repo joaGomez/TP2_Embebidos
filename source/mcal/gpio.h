@@ -24,6 +24,33 @@
 // Ports
 enum { PA, PB, PC, PD, PE };
 
+typedef enum
+{
+	PORT_mAnalog,
+	PORT_mGPIO,
+	PORT_mAlt2,
+	PORT_mAlt3,
+	PORT_mAlt4,
+	PORT_mAlt5,
+	PORT_mAlt6,
+	PORT_mAlt7,
+
+} PORTMux_t;
+
+typedef enum
+{
+	PORT_eDisabled				= 0x00,
+	PORT_eDMARising				= 0x01,
+	PORT_eDMAFalling			= 0x02,
+	PORT_eDMAEither				= 0x03,
+	PORT_eInterruptDisasserted	= 0x08,
+	PORT_eInterruptRising		= 0x09,
+	PORT_eInterruptFalling		= 0x0A,
+	PORT_eInterruptEither		= 0x0B,
+	PORT_eInterruptAsserted		= 0x0C,
+} PORTEvent_t;
+
+
 // Convert port and number into pin ID
 // Ex: PTB5  -> PORTNUM2PIN(PB,5)  -> 0x25
 //     PTC22 -> PORTNUM2PIN(PC,22) -> 0x56
@@ -67,7 +94,7 @@ typedef uint8_t pin_t;
  * @param pint the pint whose GPIO you wish to initialize
  * @return ERROR if the initialization was not successful
  */
-bool gpioInit(pin_t pin);
+bool gpioInit(pin_t pin, PORTMux_t mux);
 /**
  * @brief Configures the specified pin to behave either as an input or an output
  * @param pin the pin whose mode you wish to set (according PORTNUM2PIN)

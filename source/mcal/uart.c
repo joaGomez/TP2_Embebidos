@@ -1,12 +1,12 @@
-
 #include "hardware.h"
 #include "uart.h"
+#include "gpio.h"
 
 
-#define UART_HAL_DEFAULT_BAUDRATE 9600
+#define UART_DEFAULT_BAUDRATE 9600
 
-#define UART0_TX_PIN 	17   //PTB17
-#define UART0_RX_PIN 	16   //PTB16
+#define PIN_UART0_TX 	PORTNUM2PIN(PB, 17)
+#define PIN_UART0_RX 	PORTNUM2PIN(PB, 16)
 
 void UART_SetBaudRate (UART_Type *uart, uint32_t baudrate);
 void UART_Send_Data(unsigned char tx_data);
@@ -19,35 +19,9 @@ typedef struct {
     volatile uint16_t tail; // Índice de lectura
 } RingBuffer_t;
 
-RingBuffer_t rx_buffer = {{0}, 0, 0};
-RingBuffer_t tx_buffer = {{0}, 0, 0};
+static RingBuffer_t rx_buffer = {{0}, 0, 0};
+static RingBuffer_t tx_buffer = {{0}, 0, 0};
 
-
-typedef enum
-{
-	PORT_mAnalog,
-	PORT_mGPIO,
-	PORT_mAlt2,
-	PORT_mAlt3,
-	PORT_mAlt4,
-	PORT_mAlt5,
-	PORT_mAlt6,
-	PORT_mAlt7,
-
-} PORTMux_t;
-
-typedef enum
-{
-	PORT_eDisabled				= 0x00,
-	PORT_eDMARising				= 0x01,
-	PORT_eDMAFalling			= 0x02,
-	PORT_eDMAEither				= 0x03,
-	PORT_eInterruptDisasserted	= 0x08,
-	PORT_eInterruptRising		= 0x09,
-	PORT_eInterruptFalling		= 0x0A,
-	PORT_eInterruptEither		= 0x0B,
-	PORT_eInterruptAsserted		= 0x0C,
-} PORTEvent_t;
 
 
 
@@ -55,31 +29,37 @@ void UART_Init (void)
 {
     // Habilitar Clocks de Puertos y Periféricos
     // Cualquier acceso a bus con clock deshabilitado genera error termination.
-    SIM->SCGC5 |= SIM_SCGC5_PORTB_MASK;
+
+    gpioInit(PIN_UART0_TX, PORT_mAlt3);
+    gpioInit(PIN_UART0_RX, PORT_mAlt3);
 
     SIM->SCGC4 |= SIM_SCGC4_UART0_MASK;
     SIM->SCGC4 |= SIM_SCGC4_UART1_MASK;
 
     // Configuración de Pines (Mux Alt3 para UART0)
-    PORTB->PCR[UART0_TX_PIN] = 0x0;
-    PORTB->PCR[UART0_TX_PIN] |= PORT_PCR_MUX(PORT_mAlt3);
-    PORTB->PCR[UART0_TX_PIN] |= PORT_PCR_IRQC(PORT_eDisabled);
+    //PORTB->PCR[UART0_TX_PIN] = 0x0;
+    //PORTB->PCR[UART0_TX_PIN] |= PORT_PCR_MUX(PORT_mAlt3);
 
-    PORTB->PCR[UART0_RX_PIN] = 0x0;
-    PORTB->PCR[UART0_RX_PIN] |= PORT_PCR_MUX(PORT_mAlt3);
-    PORTB->PCR[UART0_RX_PIN] |= PORT_PCR_IRQC(PORT_eDisabled);
+    //PORTB->PCR[UART0_RX_PIN] = 0x0;
+    //PORTB->PCR[UART0_RX_PIN] |= PORT_PCR_MUX(PORT_mAlt3);
+
+    PORTB->PCR[PIN2NUM(PIN_UART0_RX)] |= PORT_PCR_IRQC(PORT_eDisabled);
+    PORTB->PCR[PIN2NUM(PIN_UART0_TX)] |= PORT_PCR_IRQC(PORT_eDisabled);
 
     // Desactivar Transmisor y Receptor para configurar parámetros críticos
     UART0->C2 &= ~(UART_C2_TE_MASK | UART_C2_RE_MASK);
 
     // Configurar Baudrate
-    UART_SetBaudRate(UART0, UART_HAL_DEFAULT_BAUDRATE);
+    UART_SetBaudRate(UART0, UART_DEFAULT_BAUDRATE);
 
+    // ---------------------
     // CONFIGURACIÓN DE FIFO
-    // Habilitar FIFOs de Transmisión (TXFE) y Recepción (RXFE)
+    // ---------------------
+
+    // Habilitar FIFOs de Transmisión y Recepción
     UART0->PFIFO |= (UART_PFIFO_TXFE_MASK | UART_PFIFO_RXFE_MASK);
 
-    // Watermarks:
+    // Watermarks
     UART0->RWFIFO = 4; // Interrumpir cuando haya 4 bytes acumulados en RX
     UART0->TWFIFO = 2; // Interrumpir cuando queden 2 espacios o menos en TX
 
@@ -103,8 +83,8 @@ void UART_SetBaudRate (UART_Type *uart, uint32_t baudrate)
 
 	clock = ((uart == UART0) || (uart == UART1))?(__CORE_CLOCK__):(__CORE_CLOCK__ >> 1);
 
-	baudrate = ((baudrate == 0)?(UART_HAL_DEFAULT_BAUDRATE):
-			((baudrate > 0x1FFF)?(UART_HAL_DEFAULT_BAUDRATE):(baudrate)));
+	baudrate = ((baudrate == 0)?(UART_DEFAULT_BAUDRATE):
+			((baudrate > 0x1FFF)?(UART_DEFAULT_BAUDRATE):(baudrate)));
 
 	sbr = clock / (baudrate << 4);               // sbr = clock/(Baudrate x 16)
 	brfa = (clock << 1) / baudrate - (sbr << 5); // brfa = 2*Clock/baudrate - 32*sbr

@@ -5,18 +5,21 @@
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
 ../source/mcal/SysTick.c \
+../source/mcal/can.c \
 ../source/mcal/gpio.c \
 ../source/mcal/i2c.c \
 ../source/mcal/uart.c 
 
 C_DEPS += \
 ./source/mcal/SysTick.d \
+./source/mcal/can.d \
 ./source/mcal/gpio.d \
 ./source/mcal/i2c.d \
 ./source/mcal/uart.d 
 
 OBJS += \
 ./source/mcal/SysTick.o \
+./source/mcal/can.o \
 ./source/mcal/gpio.o \
 ./source/mcal/i2c.o \
 ./source/mcal/uart.o 
@@ -34,7 +37,7 @@ source/mcal/%.o: ../source/mcal/%.c source/mcal/subdir.mk
 clean: clean-source-2f-mcal
 
 clean-source-2f-mcal:
-	-$(RM) ./source/mcal/SysTick.d ./source/mcal/SysTick.o ./source/mcal/gpio.d ./source/mcal/gpio.o ./source/mcal/i2c.d ./source/mcal/i2c.o ./source/mcal/uart.d ./source/mcal/uart.o
+	-$(RM) ./source/mcal/SysTick.d ./source/mcal/SysTick.o ./source/mcal/can.d ./source/mcal/can.o ./source/mcal/gpio.d ./source/mcal/gpio.o ./source/mcal/i2c.d ./source/mcal/i2c.o ./source/mcal/uart.d ./source/mcal/uart.o
 
 .PHONY: clean-source-2f-mcal
 

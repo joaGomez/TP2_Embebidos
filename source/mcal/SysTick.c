@@ -49,7 +49,7 @@ bool SysTick_Init(uint32_t tick_hz)
     SysTick->CTRL = 0;
     SysTick->LOAD = reload - 1;
     SysTick->VAL  = 0;
-    SysTick->CTRL = SysTick_CTRL_CLKSOURCE_Msk |
+    SysTick->CTRL = __CORE_CLOCK__ |
                     SysTick_CTRL_TICKINT_Msk   |
                     SysTick_CTRL_ENABLE_Msk;
 

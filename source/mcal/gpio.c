@@ -1,17 +1,7 @@
 #include "gpio.h"
 #include "hardware.h"
-typedef enum
-{
-	PORT_mAnalog,
-	PORT_mGPIO,
-	PORT_mAlt2,
-	PORT_mAlt3,
-	PORT_mAlt4,
-	PORT_mAlt5,
-	PORT_mAlt6,
-	PORT_mAlt7,
 
-} PORTMux_t;
+
 
 static PORT_Type* const pPorts[5] = PORT_BASE_PTRS;
 static GPIO_Type* const pGpios[5] = GPIO_BASE_PTRS;
@@ -21,7 +11,7 @@ static GPIO_Type* const pGpios[5] = GPIO_BASE_PTRS;
  * @param pint the pint whose GPIO you wish to initialize
  * @return ERROR if the initialization was not successful
  */
-bool gpioInit(pin_t pin) {
+bool gpioInit(pin_t pin, PORTMux_t mux) {
 	uint8_t port = PIN2PORT(pin);
 	uint8_t number = PIN2NUM(pin);
 	switch(port)
@@ -45,7 +35,7 @@ bool gpioInit(pin_t pin) {
 		return false;
 	}
 
-	pPorts[port]->PCR[number] = PORT_PCR_MUX(PORT_mGPIO);		// GPIO
+	pPorts[port]->PCR[number] = PORT_PCR_MUX(mux);		// GPIO
 
 	return true;
 }

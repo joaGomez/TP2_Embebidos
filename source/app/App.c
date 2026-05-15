@@ -101,6 +101,14 @@ void App_Run(void) {
 		Accel_GetProcessedData(&rawValues);
 		Accel_CalculateAngles(&rawValues, &angles);
 
+		
+		/*************************************
+		 *
+		 * 	LECTURA EN EL PUERTO DE LA PC
+		 *
+		 ************************************/
+		
+		/*
 		// --- IMPRIMIR ROLIDO ---
 		UART_SendString("Rolido: ");
 		int_to_ascii((int)angles.roll, val_ascii);
@@ -116,10 +124,28 @@ void App_Run(void) {
 		// --- NUEVA LINEA ---
 		UART_SendString("\r\n");
 		}
-
 		// Delay para que la terminal sea legible
 		for(volatile int i = 0; i < 5000000; i++);
+		*/
 
+
+		/*************************************
+		 *
+		 * 	LECTURA EN LA APP DE PYTHON
+		 *
+		 ************************************/
+		// --- ENVIAR ROLIDO (angle 0) ---
+		UART_SendString(">S0,A0,V"); // Cabecera: Estación 0, Ángulo 0
+		int_to_ascii((int)angles.roll, val_ascii);
+		UART_SendString(val_ascii);
+		UART_SendString("\n"); // Fin de trama
+
+		// --- ENVIAR CABECEO (angle 1) ---
+		UART_SendString(">S0,A1,V"); // Cabecera: Estación 0, Ángulo 1
+		int_to_ascii((int)angles.pitch, val_ascii);
+		UART_SendString(val_ascii);
+		UART_SendString("\n"); // Fin de trama
+	}
 }
 
 

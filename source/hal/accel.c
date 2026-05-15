@@ -8,6 +8,11 @@
 
 #define PI 3.1415926535f
 
+// Sensibilidad de lectura de los datos del acelerómetro
+#define SENS_2G				0x00
+#define SENS_4G				0x01
+#define SENS_8G				0x02
+
 
 static uint8_t g_accel_raw_buffer[6];
 
@@ -17,8 +22,8 @@ void Accel_Init(void) {
     // Sensor en Standby para poder configurar registros
     I2C_WriteByte(ACCEL_ADDR, REG_CTRL_REG1, 0x00);
 
-    // Rango dinámico a +/- 2g
-    I2C_WriteByte(ACCEL_ADDR, REG_XYZ_DATA_CFG, 0x00);
+
+    I2C_WriteByte(ACCEL_ADDR, REG_XYZ_DATA_CFG, SENS_8G);
 
     // Activar el sensor (Modo Active, ODR 800Hz)
     I2C_WriteByte(ACCEL_ADDR, REG_CTRL_REG1, 0x01);
@@ -57,11 +62,8 @@ void Accel_CalculateAngles(AccelData_t *raw_data, AccelAngles_t *angles) {
     float ay = (float)raw_data->y;
     float az = (float)raw_data->z;
 
-    // Rolido (φ): atan2(y, z)
-    // El resultado de atan2 está en radianes, multiplicamos para pasar a grados
-    angles->roll = atan2f(ay, az) * (180.0f / PI);
+    angles->pitch = atan2f(ay, az) * (-180.0f / PI);
 
-    // Cabeceo (θ): atan2(-x, sqrt(y^2 + z^2))
     float denominator = sqrtf(ay * ay + az * az);
-    angles->pitch = atan2f(-ax, denominator) * (180.0f / PI);
+    angles->roll = atan2f(-ax, denominator) * (-180.0f / PI);
 }

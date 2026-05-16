@@ -6,11 +6,11 @@
 
 enum
 {
-	ZERO,
-	RED,
-	GREEN,
+	LEDOFF,
 	BLUE,
+	GREEN,
 	CYAN,
+	RED,
 	PINK,
 	YELLOW,
 	WHITE

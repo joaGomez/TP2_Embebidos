@@ -15,7 +15,7 @@
 #include "hal/timers.h"
 #include "hal/accel.h"
 
-#include "mcal/uart.h"
+#include "hal/USBComunications.h"
 #include "hardware.h"
 
 
@@ -41,17 +41,24 @@ AccelAngles_t angles;      // Para Rolido y Cabeceo en grados
 
 char val_ascii[12];        // Buffer para conversión numérica
 
+typedef struct 
+{
+	char cabeceo[4];
+	char rolido[4];
+	char orientacion[4];
+} position_t;
 
+position_t posGrupos[4]; // Nombre de grupo - 1
 
 void App_Init(void) {
 	Accel_Init();
-	UART_Init();
+	USBCom_Init();
 	__enable_irq();
 
 	// --- TEST: Enviar mensaje desde la Freedom a la PC ---
-	UART_SendString("\r\n*********************************\r\n");
-	UART_SendString("   FRDM-K64F: UART READY (9600)\r\n");
-	UART_SendString("*********************************\r\n");
+	USBCom_SendString("\r\n*********************************\r\n");
+	USBCom_SendString("   FRDM-K64F: USB READY (9600)\r\n");
+	USBCom_SendString("*********************************\r\n");
 
 }
 
@@ -90,9 +97,25 @@ void App_Run(void) {
 		// Mientras esto ocurre, las interrupciones llenan el buffer en background
 		while (!Accel_IsDataReady()) {
 
+			/*
+			if (CANReceived())
+			{
+				if (RGB)
+				{
+					prendo;
+				}
+				else 
+				{
+					char CANData[4];
+					uint8_t group;
+					char CANDataType;
+					armoPos(group = USBUpdate(CANData, &CANDataType)); // En posGrupos[G-1]
+					mandoPosUSB(); // UART
+				}
+			}
+			*/
 
-
-			//	Código en paralelo
+			
 
 
 
@@ -101,7 +124,16 @@ void App_Run(void) {
 		Accel_GetProcessedData(&rawValues);
 		Accel_CalculateAngles(&rawValues, &angles);
 
+		/* if (se movio mas de 5 grados del anterior dato && paso mas de 50ms) {
+			Enviar por USB 
+			CAN el nuevo valor SendCAN
+		}	else if (paso mas de 2s)
+		{ 	
+			Enviar por USB y CAN el nuevo valor aunque no se haya movido
+		}
 		
+		*/
+
 		/*************************************
 		 *
 		 * 	LECTURA EN EL PUERTO DE LA PC
@@ -135,6 +167,7 @@ void App_Run(void) {
 		 *
 		 ************************************/
 		// --- ENVIAR ROLIDO (angle 0) ---
+		/*
 		UART_SendString(">S0,A0,V"); // Cabecera: Estación 0, Ángulo 0
 		int_to_ascii((int)angles.roll, val_ascii);
 		UART_SendString(val_ascii);
@@ -145,6 +178,7 @@ void App_Run(void) {
 		int_to_ascii((int)angles.pitch, val_ascii);
 		UART_SendString(val_ascii);
 		UART_SendString("\n"); // Fin de trama
+		*/
 	}
 }
 

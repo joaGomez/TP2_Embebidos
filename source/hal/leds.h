@@ -6,6 +6,7 @@
 
 enum
 {
+	ZERO,
 	RED,
 	GREEN,
 	BLUE,

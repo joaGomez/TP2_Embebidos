@@ -27,6 +27,8 @@
  * VARIABLE PROTOTYPES WITH GLOBAL SCOPE
  ******************************************************************************/
 
+
+
 /*******************************************************************************
  * FUNCTION PROTOTYPES WITH GLOBAL SCOPE
  ******************************************************************************/
@@ -54,7 +56,7 @@ bool CAN0_WriteMessage(uint32_t id, uint8_t* data, uint8_t size);
  * @param data pointer to where data should be saved
  * @return false if there is no message, true if a message was received
  */
-bool CAN0_MsgGetter(uint32_t* id, uint8_t* data);
+bool CAN0_MsgGetter(uint32_t* id, uint8_t* data, uint8_t *size);
 
 
 

@@ -95,12 +95,13 @@ bool CAN0_WriteMessage(uint32_t id, uint8_t* data, uint8_t size) {
 volatile bool nuevo_dato_disponible = false;
 uint8_t datos_recibidos[8];
 uint32_t id_recibido;
+uint8_t  dlc_recibido;
 
 void CAN0_ORed_Message_buffer_IRQHandler(void) {
     
     if (CAN0->IFLAG1 & (1 << 1)) {
         
-        
+        dlc_recibido = (uint8_t)((CAN0->MB[1].CS & CAN_CS_DLC_MASK) >> CAN_CS_DLC_SHIFT);
         id_recibido = (CAN0->MB[1].ID & CAN_ID_STD_MASK) >> CAN_ID_STD_SHIFT;
         
         
@@ -122,15 +123,16 @@ void CAN0_ORed_Message_buffer_IRQHandler(void) {
 
 
 
-bool CAN0_MsgGetter(uint32_t *id_out, uint8_t *data_out) {
+bool CAN0_MsgGetter(uint32_t *id_out, uint8_t *data_out, uint8_t *size) {
     if (!nuevo_dato_disponible) {
         return false; 
     }
 
     __disable_irq(); 
 
+    *size = dlc_recibido;
     *id_out = id_recibido;
-    for(int i = 0; i < 8; i++) {
+    for(uint8_t i = 0; i < dlc_recibido; i++) {
         data_out[i] = datos_recibidos[i];
     }
     nuevo_dato_disponible = false; 

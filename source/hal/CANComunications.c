@@ -48,6 +48,45 @@ bool isMsgPosition(void){
     return true;
 }
 
+void USBUpdate(char * USBData){
+
+    
+    // Usamos la máscara para quedarnos solo con los 3 bits más bajos (0 a 7)
+    uint8_t ngroup = (uint8_t)(id & CAN_GROUP_MASK) - 1;
+    
+    // Mapeamos la letra del formato de mensajes CAN ('R', 'C', 'O') al número de ángulo que quiere la GUI (0, 1, 2)
+    char angleId = '0'; 
+    if (msg[0] == 'C') {
+        angleId = '1'; // Pitch
+    } else if (msg[0] == 'O') {
+        angleId = '2'; // Yaw
+    } // Si es 'R', queda en 0 (Roll)
+
+    uint8_t i = 0;
+    
+    USBData[i++] = '>';
+    USBData[i++] = 'S';
+    USBData[i++] = (char)(ngroup + '0'); // Convertimos el entero (0-6) a su carácter ASCII ('0'-'6')
+    USBData[i++] = ',';
+    USBData[i++] = 'A';
+    USBData[i++] = angleId;       // Ya es un carácter ASCII
+    USBData[i++] = ',';
+    USBData[i++] = 'V';
+
+    // Copiamos los caracteres del número que ya están en formato ASCII 
+    for(uint8_t j = 1; j < msglength; j++) {
+        USBData[i++] = msg[j];
+    }
+    
+    // Completamos el salto de linea y el EOS
+    USBData[i++] = '\n';
+    USBData[i]   = '\0';
+
+    return;
+}
+
+
+/*
 uint8_t USBUpdate(char * CANData, char * CANDataType){
 
     *CANDataType = msg[0];
@@ -66,6 +105,7 @@ uint8_t USBUpdate(char * CANData, char * CANDataType){
 
     return group;
 }
+    */
 
 bool SendCAN(char * CANData, char CANDataType, uint8_t size){
     

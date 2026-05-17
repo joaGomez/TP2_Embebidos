@@ -10,8 +10,8 @@ void initTimers() {
   pisr_register(updateTick, 5);
 }
 
-timer_t timerCreate(uint32_t durationMillis) {
-  return (timer_t){.startMillis = 0, .durationMillis = durationMillis, .started = false};
+timer_t timerCreate(void/*uint32_t durationMillis*/) {
+  return (timer_t){.startMillis = 0/*, .durationMillis = durationMillis*/, .started = false};
 }
 
 void timerStart(timer_t* timer) {
@@ -19,9 +19,15 @@ void timerStart(timer_t* timer) {
   timer->started = true;
 }
 
-bool timerFinished(timer_t* timer) {
-  return (ticks - timer->startMillis) >= timer->durationMillis;
+uint64_t timerCheck(timer_t* timer) {
+  return (ticks - timer->startMillis);
 }
+
+bool timerReset(timer_t* timer) {
+  timer->startMillis = ticks;
+  return true;
+}
+
 
 static void updateTick() {
   ++ticks;

@@ -11,14 +11,14 @@
 // } timer_t;
 
 typedef struct TIMER {
-  uint32_t durationMillis;
+  //uint32_t durationMillis;
   uint64_t startMillis;
   bool started;
 } timer_t;
 
 void initTimers();
-timer_t timerCreate(uint32_t durationMillis);
+timer_t timerCreate(/*uint32_t durationMillis*/void);
 void timerStart(timer_t* timer);
-bool timerFinished(timer_t* timer);
+uint64_t timerCheck(timer_t* timer);
 
 #endif // _TIMER_H_

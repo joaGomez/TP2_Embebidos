@@ -102,65 +102,70 @@ void App_Run(void) {
 	 *
 	 ************************************/
 
-	if (Accel_StartCapture()) {
+	if (Accel_StartCapture()) 
+	{
 		// Mientras esto ocurre, las interrupciones llenan el buffer en background
-		while (!Accel_IsDataReady()) {
-			if (CANReceived() && isMsgPosition())
+		while (!Accel_IsDataReady()) 
+		{
+			if (CANReceived())
 			{
-				char CANData[MAXCHAR];
-				uint8_t group;
-				char CANDataType;
-				group = (USBUpdate(CANData, &CANDataType)); // En posGrupos[G-1]
-				switch (CANDataType)
+				if (isMsgPosition())
 				{
-					case 'R': // Roll
-						for (int i = 0; i < MAXCHAR; i++)
-						{
-							posGrupos[group-1].roll[i] = CANData[i];
-						}
-						break;
-					case 'C': // Pitch
-						for (int i = 0; i < MAXCHAR; i++)
-						{
-							posGrupos[group-1].pitch[i] = CANData[i];
-						}
-						break;
-					case 'O': // Orientación
-						for (int i = 0; i < MAXCHAR; i++)
-						{
-							posGrupos[group-1].orientation[i] = CANData[i];
-						}
-						break;
-					default:
-						break;
-				}
-				switch(group)
-				{
-					case 0:
-						USBCom_SendString(">S0,A1,V"); // Rolido: Estación 0, Ángulo 1
-						USBCom_SendString(posGrupos[0].roll);
-						USBCom_SendString("\n"); // Fin de trama
-						USBCom_SendString(">S0,A0,V"); // Pitch: Estación 0, Ángulo 0
-						USBCom_SendString(posGrupos[0].pitch);
-						USBCom_SendString("\n"); // Fin de trama
-						break;
-					case 1:
-						USBCom_SendString(">S1,A1,V"); // Rolido: Estación 1, Ángulo 1
-						USBCom_SendString(posGrupos[1].roll);
-						USBCom_SendString("\n"); // Fin de trama
-						USBCom_SendString(">S1,A0,V"); // Pitch: Estación 1, Ángulo 0
-						USBCom_SendString(posGrupos[1].pitch);
-						USBCom_SendString("\n"); // Fin de trama
-						break;
-					default:
-					case 2:
-						USBCom_SendString(">S2,A1,V"); // Rolido: Estación 2, Ángulo 1
-						USBCom_SendString(posGrupos[2].roll);
-						USBCom_SendString("\n"); // Fin de trama
-						USBCom_SendString(">S2,A0,V"); // Pitch: Estación 2, Ángulo 0
-						USBCom_SendString(posGrupos[2].pitch);
-						USBCom_SendString("\n"); // Fin de trama
-						break;
+					char CANData[MAXCHAR];
+					uint8_t group;
+					char CANDataType;
+					group = (USBUpdate(CANData, &CANDataType)); // En posGrupos[G-1]
+					switch (CANDataType)
+					{
+						case 'R': // Roll
+							for (int i = 0; i < MAXCHAR; i++)
+							{
+								posGrupos[group-1].roll[i] = CANData[i];
+							}
+							break;
+						case 'C': // Pitch
+							for (int i = 0; i < MAXCHAR; i++)
+							{
+								posGrupos[group-1].pitch[i] = CANData[i];
+							}
+							break;
+						case 'O': // Orientación
+							for (int i = 0; i < MAXCHAR; i++)
+							{
+								posGrupos[group-1].orientation[i] = CANData[i];
+							}
+							break;
+						default:
+							break;
+					}
+					switch(group)
+					{
+						case 0:
+							USBCom_SendString(">S0,A1,V"); // Rolido: Estación 0, Ángulo 1
+							USBCom_SendString(posGrupos[0].roll);
+							USBCom_SendString("\n"); // Fin de trama
+							USBCom_SendString(">S0,A0,V"); // Pitch: Estación 0, Ángulo 0
+							USBCom_SendString(posGrupos[0].pitch);
+							USBCom_SendString("\n"); // Fin de trama
+							break;
+						case 1:
+							USBCom_SendString(">S1,A1,V"); // Rolido: Estación 1, Ángulo 1
+							USBCom_SendString(posGrupos[1].roll);
+							USBCom_SendString("\n"); // Fin de trama
+							USBCom_SendString(">S1,A0,V"); // Pitch: Estación 1, Ángulo 0
+							USBCom_SendString(posGrupos[1].pitch);
+							USBCom_SendString("\n"); // Fin de trama
+							break;
+						default:
+						case 2:
+							USBCom_SendString(">S2,A1,V"); // Rolido: Estación 2, Ángulo 1
+							USBCom_SendString(posGrupos[2].roll);
+							USBCom_SendString("\n"); // Fin de trama
+							USBCom_SendString(">S2,A0,V"); // Pitch: Estación 2, Ángulo 0
+							USBCom_SendString(posGrupos[2].pitch);
+							USBCom_SendString("\n"); // Fin de trama
+							break;
+					}
 				}
 			}
 		}

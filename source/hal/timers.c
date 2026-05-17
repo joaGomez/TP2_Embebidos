@@ -17,7 +17,6 @@ timer_t timerCreate(uint32_t durationMillis) {
 void timerStart(timer_t* timer) {
   timer->startMillis = ticks;
   timer->started = true;
-  timer->finished = false;
 }
 
 bool timerFinished(timer_t* timer) {

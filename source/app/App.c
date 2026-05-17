@@ -27,9 +27,9 @@
  ******************************************************************************/
 
 #define MAXCHAR 4
-#define minTimeElapsed 50 // ms
+#define MINTIMEELAPSED 50 // ms
 
-#define maxTimeElapsed 2000 // ms
+#define MAXTIMEELAPSED 2000 // ms
 
 /*******************************************************************************
  * FUNCTION PROTOTYPES FOR PRIVATE FUNCTIONS WITH FILE LEVEL SCOPE
@@ -46,8 +46,7 @@ AccelAngles_t angles;      // Para roll y pitch en grados
 
 
 char val_ascii[MAXCHAR];        // Buffer para conversión numérica
-timer_t fiftyMilsTimer = {minTimeElapsed, 0, false, false};
-timer_t twoSecsTimer = {maxTimeElapsed, 0, false, false};
+
 
 typedef struct 
 {
@@ -67,14 +66,10 @@ void App_Init(void) {
 	Accel_Init();
 	USBCom_Init();
 	__enable_irq();
-	initSystem(1000); // 1ms tick
-	initTimers();
 	// --- TEST: Enviar mensaje desde la Freedom a la PC ---
 	USBCom_SendString("\r\n*********************************\r\n");
 	USBCom_SendString("   FRDM-K64F: USB READY (9600)\r\n");
 	USBCom_SendString("*********************************\r\n");
-	timerStart(&fiftyMilsTimer);
-	timerStart(&twoSecsTimer);
 }
 
 /* Función que se llama constantemente en un ciclo infinito */
@@ -174,34 +169,16 @@ void App_Run(void) {
 
 	Accel_GetProcessedData(&rawValues);
 	Accel_CalculateAngles(&rawValues, &angles);
-	fiftyMilsTimer.finished = timerFinished(&fiftyMilsTimer);
-	twoSecsTimer.finished = timerFinished(&twoSecsTimer);
-	if ( (((angles.roll > (ascii_to_int(posGrupos[3].roll) + 5) || angles.roll < (ascii_to_int(posGrupos[3].roll) - 5)) && fiftyMilsTimer.finished) || twoSecsTimer.finished) ) 
+	if ( (((angles.roll > (ascii_to_int(posGrupos[3].roll) + 5) || angles.roll < (ascii_to_int(posGrupos[3].roll) - 5)) && true) || false) ) 
 	{
-		if (fiftyMilsTimer.finished)
-		{
-			timerStart(&fiftyMilsTimer);
-		}
-		else if (twoSecsTimer.finished)
-		{
-			timerStart(&twoSecsTimer);
-		}
 		USBCom_SendString(">S3,A1,V"); // Rolido: Estación 3, Ángulo 1
 		int_to_ascii((int)angles.roll, posGrupos[3].roll);
 		USBCom_SendString(posGrupos[3].roll);
 		USBCom_SendString("\n"); // Fin de trama
 		sendCAN(posGrupos[3].roll, 'R', sizeof(posGrupos[3].roll)/sizeof(posGrupos[3].roll[0]));
 	}
-	if ( (((angles.pitch > (ascii_to_int(posGrupos[3].pitch) + 5) || angles.pitch < (ascii_to_int(posGrupos[3].pitch) - 5)) && fiftyMilsTimer.finished) || twoSecsTimer.finished) ) // falta chequear el tiempo
+	if ( (((angles.pitch > (ascii_to_int(posGrupos[3].pitch) + 5) || angles.pitch < (ascii_to_int(posGrupos[3].pitch) - 5)) && true) || false) ) // falta chequear el tiempo
 	{
-		if (fiftyMilsTimer.finished)
-		{
-			timerStart(&fiftyMilsTimer);
-		}
-		else if (twoSecsTimer.finished)
-		{
-			timerStart(&twoSecsTimer);
-		}
 		USBCom_SendString(">S3,A0,V"); // Pitch: Estación 3, Ángulo 0
 		int_to_ascii((int)angles.pitch, posGrupos[3].pitch);
 		USBCom_SendString(posGrupos[3].pitch);
@@ -304,7 +281,6 @@ int ascii_to_int(char * s)
 	while (*s != '\0')
 	{
 		aux += (int)((*s) - '0')*j;
-		printf("Aux = %d\n", aux);
 		j /= 10;
 		s++;
 	}

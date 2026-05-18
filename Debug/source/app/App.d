@@ -1,7 +1,8 @@
 source/app/App.o source/app/App.d: ../source/app/App.c \
  ../source/hal/board.h ../source/mcal/gpio.h ../source/hal/leds.h \
  ../source/hal/system.h ../source/hal/timers.h ../source/hal/accel.h \
- ../source/hal/USBComunications.h ../SDK/startup/hardware.h \
+ ../source/hal/USBComunications.h ../source/hal/CANComunications.h \
+ ../source/mcal/can.h ../SDK/startup/hardware.h \
  ../SDK/CMSIS/fsl_device_registers.h ../SDK/CMSIS/MK64F12.h \
  ../SDK/CMSIS/core_cm4.h ../SDK/CMSIS/cmsis_version.h \
  ../SDK/CMSIS/cmsis_compiler.h ../SDK/CMSIS/cmsis_gcc.h \
@@ -14,6 +15,8 @@ source/app/App.o source/app/App.d: ../source/app/App.c \
 ../source/hal/timers.h:
 ../source/hal/accel.h:
 ../source/hal/USBComunications.h:
+../source/hal/CANComunications.h:
+../source/mcal/can.h:
 ../SDK/startup/hardware.h:
 ../SDK/CMSIS/fsl_device_registers.h:
 ../SDK/CMSIS/MK64F12.h:

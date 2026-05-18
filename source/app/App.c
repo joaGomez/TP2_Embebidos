@@ -16,6 +16,7 @@
 #include "hal/accel.h"
 
 #include "hal/USBComunications.h"
+#include "hal/CANComunications.h"
 #include "hardware.h"
 
 
@@ -74,6 +75,7 @@ void App_Init(void) {
 	USBCom_Init();
 	initTimers();
 	initSystem(20);		// 20Hz == 50ms por cada interrupcion
+	CANCom_Init();
 
 	if(ledsInit(RED)) {
 		return;
@@ -107,7 +109,7 @@ void App_Run(void) {
 				if ((rx_led_byte & 0x80) && !(rx_led_byte & 0x08)) {
 					uint8_t target_group = (rx_led_byte >> 4) & 0x07;
 
-					if (target_group == 3) {
+					if (target_group == 4) {
 						// Controlar hardware local
 						uint8_t r = (rx_led_byte >> 2) & 0x01;
 						uint8_t g = (rx_led_byte >> 1) & 0x01;
@@ -119,7 +121,7 @@ void App_Run(void) {
 
 					}
 					else {
-						sendCAN(&rx_led_byte, 'L', 1);
+						SendCAN(&rx_led_byte, 'L', 1);
 					}
 				}
 			}
@@ -138,19 +140,19 @@ void App_Run(void) {
 						case 'R': // Roll
 							for (int i = 0; i < MAXCHAR; i++)
 							{
-								posGrupos[group-1].roll[i] = CANData[i];
+								posGrupos[group].roll[i] = CANData[i];
 							}
 							break;
 						case 'C': // Pitch
 							for (int i = 0; i < MAXCHAR; i++)
 							{
-								posGrupos[group-1].pitch[i] = CANData[i];
+								posGrupos[group].pitch[i] = CANData[i];
 							}
 							break;
 						case 'O': // Orientación
 							for (int i = 0; i < MAXCHAR; i++)
 							{
-								posGrupos[group-1].orientation[i] = CANData[i];
+								posGrupos[group].orientation[i] = CANData[i];
 							}
 							break;
 						default:
@@ -174,7 +176,6 @@ void App_Run(void) {
 							USBCom_SendString(posGrupos[1].pitch);
 							USBCom_SendString("\n"); // Fin de trama
 							break;
-						default:
 						case 2:
 							USBCom_SendString(">S2,A0,V"); // Rolido: Estación 2, Ángulo 1
 							USBCom_SendString(posGrupos[2].roll);
@@ -182,6 +183,32 @@ void App_Run(void) {
 							USBCom_SendString(">S2,A1,V"); // Pitch: Estación 2, Ángulo 0
 							USBCom_SendString(posGrupos[2].pitch);
 							USBCom_SendString("\n"); // Fin de trama
+							break;
+						case 3:
+							USBCom_SendString(">S3,A0,V"); // Rolido: Estación 3, Ángulo 1
+							USBCom_SendString(posGrupos[3].roll);
+							USBCom_SendString("\n"); // Fin de trama
+							USBCom_SendString(">S3,A1,V"); // Pitch: Estación 3, Ángulo 0
+							USBCom_SendString(posGrupos[3].pitch);
+							USBCom_SendString("\n"); // Fin de trama
+							break;
+						case 5:
+							USBCom_SendString(">S5,A0,V"); // Rolido: Estación 3, Ángulo 1
+							USBCom_SendString(posGrupos[5].roll);
+							USBCom_SendString("\n"); // Fin de trama
+							USBCom_SendString(">S5,A1,V"); // Pitch: Estación 3, Ángulo 0
+							USBCom_SendString(posGrupos[5].pitch);
+							USBCom_SendString("\n"); // Fin de trama
+							break;
+						case 6:
+							USBCom_SendString(">S6,A0,V"); // Rolido: Estación 3, Ángulo 1
+							USBCom_SendString(posGrupos[6].roll);
+							USBCom_SendString("\n"); // Fin de trama
+							USBCom_SendString(">S6,A1,V"); // Pitch: Estación 3, Ángulo 0
+							USBCom_SendString(posGrupos[6].pitch);
+							USBCom_SendString("\n"); // Fin de trama
+							break;
+						default:
 							break;
 					}
 				}
@@ -207,22 +234,22 @@ void App_Run(void) {
 		timerReset(&timerR_50ms);
 		timerReset(&timerR_2000ms);
 
-		USBCom_SendString(">S3,A0,V"); // Rolido: Estación 3, Ángulo 0
-		int_to_ascii((int)angles.roll, posGrupos[3].roll);
-		USBCom_SendString(posGrupos[3].roll);
+		USBCom_SendString(">S4,A0,V"); // Rolido: Estación 4, Ángulo 0
+		int_to_ascii((int)angles.roll, posGrupos[4].roll);
+		USBCom_SendString(posGrupos[4].roll);
 		USBCom_SendString("\n"); // Fin de trama
-		// sendCAN(posGrupos[3].roll, 'R', sizeof(posGrupos[3].roll)/sizeof(posGrupos[3].roll[0]));
+		SendCAN(posGrupos[4].roll, 'R', sizeof(posGrupos[4].roll)/sizeof(posGrupos[4].roll[0]));
 	}
-	if ( (((angles.pitch > (ascii_to_int(posGrupos[3].pitch) + 5) || angles.pitch < (ascii_to_int(posGrupos[3].pitch) - 5)) && timerC_50ms_finished) || timerC_2000ms_finished) ) // falta chequear el tiempo
+	if ( (((angles.pitch > (ascii_to_int(posGrupos[4].pitch) + 5) || angles.pitch < (ascii_to_int(posGrupos[4].pitch) - 5)) && timerC_50ms_finished) || timerC_2000ms_finished) ) // falta chequear el tiempo
 	{
 		timerReset(&timerC_50ms);
 		timerReset(&timerC_2000ms);
 
-		USBCom_SendString(">S3,A1,V"); // Pitch: Estación 3, Ángulo 1
-		int_to_ascii((int)angles.pitch, posGrupos[3].pitch);
-		USBCom_SendString(posGrupos[3].pitch);
+		USBCom_SendString(">S4,A1,V"); // Pitch: Estación 4, Ángulo 1
+		int_to_ascii((int)angles.pitch, posGrupos[4].pitch);
+		USBCom_SendString(posGrupos[4].pitch);
 		USBCom_SendString("\n"); // Fin de trama
-		//sendCAN(posGrupos[3].pitch, 'C', sizeof(posGrupos[3].pitch)/sizeof(posGrupos[3].pitch[0]));
+		SendCAN(posGrupos[4].pitch, 'C', sizeof(posGrupos[4].pitch)/sizeof(posGrupos[4].pitch[0]));
 	}
 }	
 

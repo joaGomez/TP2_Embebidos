@@ -39,7 +39,7 @@
  * @param 
  * @return false if initialized succesfully
  */
-void CAN0_Init(void);
+bool CAN0_Init(void);
 
 /**
  * @brief Function to transmit a message

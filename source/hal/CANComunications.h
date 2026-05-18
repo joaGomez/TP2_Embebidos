@@ -11,7 +11,7 @@
  * @brief Inicializa el módulo de comunicación CAN y los periféricos asociados.
  * @return false si hubo un error en la inicialización, true si se configuró correctamente.
  */
-bool CANInit(void);
+bool CANCom_Init(void);
 
 /**
  * @brief Verifica la disponibilidad de nuevos mensajes en el bus CAN.
@@ -30,7 +30,7 @@ bool isMsgPosition(void); // Devuelve false si es RGB, se encarga en caso de RGB
  * @param USBData Puntero al buffer de memoria (char array) donde se guardará el string resultante.
  * @return void
  */
-void USBUpdate(char * USBData); // Devuelve Grupo
+uint8_t USBUpdate(char * CANData, char * CANDataType); // Devuelve Grupo
 
 /**
  * @brief Empaqueta y transmite datos en formato ASCII de longitud variable hacia el bus CAN.

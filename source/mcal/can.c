@@ -6,27 +6,25 @@
 #define PIN_CAN0_TX    PORTNUM2PIN(PB, 18)
 #define PIN_CAN0_RX    PORTNUM2PIN(PB, 19)
 
-#define PRESDIV (((__CORE_CLOCK__) / ((CAN_BAUDRATE) * (TOTAL_TQ))) - 1)
+#define PRESDIV ((((__CORE_CLOCK__)/2) / ((CAN_BAUDRATE) * (TOTAL_TQ))) - 1)
 
-bool CAN_Init(void) {
+bool CAN0_Init(void) {
 	
-    SIM->SCGC6 |= SIM_SCGC6_FLEXCAN0_MASK;
     
     gpioInit(PIN_CAN0_TX, PORT_mAlt2);
 	gpioInit(PIN_CAN0_RX, PORT_mAlt2);
 
+    SIM->SCGC6 |= SIM_SCGC6_FLEXCAN0_MASK;
 	//CAN0->MCR &= ~(CAN_MCR_MDIS(1));		// Enables FLEXCAN
     CAN0->MCR |= CAN_MCR_MDIS_MASK;
     CAN0->CTRL1 |= CAN_CTRL1_CLKSRC(1);
 
-	CAN0->MCR = CAN_MCR_FRZ(1)        | 
-                CAN_MCR_HALT(1)       | 
-                CAN_MCR_MAXMB(15)     | 
-                CAN_MCR_SRXDIS(1);
+	CAN0->MCR = ~(CAN_MCR_MDIS(1));
+
+    while (CAN0->MCR & CAN_MCR_LPMACK_MASK);
 
 
 	
-    while (CAN0->MCR & CAN_MCR_LPMACK_MASK);
     while (!(CAN0->MCR & CAN_MCR_FRZACK_MASK));
 
 
@@ -57,7 +55,7 @@ bool CAN_Init(void) {
 	CAN0->IMASK1 |= (1 << 1); 
 	NVIC_EnableIRQ(CAN0_ORed_Message_buffer_IRQn);
 
-	CAN0->MCR &= ~(CAN_MCR_HALT_MASK | CAN_MCR_FRZ_MASK);
+	CAN0->MCR &= ~(CAN_MCR_HALT_MASK);
 
     while (CAN0->MCR & CAN_MCR_FRZACK_MASK);
 	return true;
@@ -71,6 +69,7 @@ bool CAN0_WriteMessage(uint32_t id, uint8_t* data, uint8_t size) {
 	if ((CAN0->MB[0].CS & CAN_CS_CODE_MASK) != CAN_CS_CODE(8)) {
         return false; 
     }
+	//CAN0->MB[0].CS = CAN_CS_CODE(8);
 
    
     CAN0->IFLAG1 = (1 << 0);

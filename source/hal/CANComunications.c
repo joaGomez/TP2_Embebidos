@@ -20,11 +20,9 @@ uint8_t msglength;
 
 
 
-bool CANInit(void){
+bool CANCom_Init(void){
     CAN0_Init();
-    ledsInit(RED);
-    ledsInit(GREEN);
-    ledsInit(BLUE);
+    return true;
 }
 
 bool CANReceived(void){
@@ -48,6 +46,7 @@ bool isMsgPosition(void){
     return true;
 }
 
+/*
 void USBUpdate(char * USBData){
 
     
@@ -83,21 +82,37 @@ void USBUpdate(char * USBData){
     USBData[i]   = '\0';
 
     return;
-}
+}*/
 
 
-/*
+
 uint8_t USBUpdate(char * CANData, char * CANDataType){
 
     *CANDataType = msg[0];
     
     uint8_t cant0 = CANT0(msglength);
     uint8_t i = 0;
+    uint8_t j = 1;
+    int8_t sign = 1;
 
-    for(i=0; i < cant0; i++){
-        CANData[i] = '0';
+    if (msg[j] == '-') {
+    	sign *= -1;
+    	CANData[i++] = msg[1];
+    	j++;
     }
-    for(uint8_t j = 1; j< msglength; j++){
+
+
+
+    for(uint8_t k=0; k < cant0; k++){
+        CANData[i++] = '0';
+    }
+
+    while(j<msglength) {
+    	CANData[i++]= msg[j];
+    	j++;
+    }
+
+    for(j; j< msglength; j++){
         CANData[i++]= msg[j];
     }
 
@@ -105,7 +120,7 @@ uint8_t USBUpdate(char * CANData, char * CANDataType){
 
     return group;
 }
-    */
+
 
 bool SendCAN(char * CANData, char CANDataType, uint8_t size){
     

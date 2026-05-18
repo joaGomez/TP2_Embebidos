@@ -2,12 +2,12 @@
 #include "mcal/SysTick.h"
 #include <stdint.h>
 
-uint64_t ticks = 0;
+static uint64_t ticks = 0;
 
-static void updateTick();
+static void updateTick(void);
 
-void initTimers() {
-  pisr_register(updateTick, 5);
+void initTimers(void) {
+  pisr_register(updateTick, 1);
 }
 
 timer_t timerCreate(void/*uint32_t durationMillis*/) {
@@ -23,9 +23,8 @@ uint64_t timerCheck(timer_t* timer) {
   return (ticks - timer->startMillis);
 }
 
-bool timerReset(timer_t* timer) {
+void timerReset(timer_t* timer) {
   timer->startMillis = ticks;
-  return true;
 }
 
 

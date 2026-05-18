@@ -4,21 +4,27 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
+../source/hal/CANComunications.c \
 ../source/hal/IRQN_Ports.c \
+../source/hal/USBComunications.c \
 ../source/hal/accel.c \
 ../source/hal/leds.c \
 ../source/hal/system.c \
 ../source/hal/timers.c 
 
 C_DEPS += \
+./source/hal/CANComunications.d \
 ./source/hal/IRQN_Ports.d \
+./source/hal/USBComunications.d \
 ./source/hal/accel.d \
 ./source/hal/leds.d \
 ./source/hal/system.d \
 ./source/hal/timers.d 
 
 OBJS += \
+./source/hal/CANComunications.o \
 ./source/hal/IRQN_Ports.o \
+./source/hal/USBComunications.o \
 ./source/hal/accel.o \
 ./source/hal/leds.o \
 ./source/hal/system.o \
@@ -37,7 +43,7 @@ source/hal/%.o: ../source/hal/%.c source/hal/subdir.mk
 clean: clean-source-2f-hal
 
 clean-source-2f-hal:
-	-$(RM) ./source/hal/IRQN_Ports.d ./source/hal/IRQN_Ports.o ./source/hal/accel.d ./source/hal/accel.o ./source/hal/leds.d ./source/hal/leds.o ./source/hal/system.d ./source/hal/system.o ./source/hal/timers.d ./source/hal/timers.o
+	-$(RM) ./source/hal/CANComunications.d ./source/hal/CANComunications.o ./source/hal/IRQN_Ports.d ./source/hal/IRQN_Ports.o ./source/hal/USBComunications.d ./source/hal/USBComunications.o ./source/hal/accel.d ./source/hal/accel.o ./source/hal/leds.d ./source/hal/leds.o ./source/hal/system.d ./source/hal/system.o ./source/hal/timers.d ./source/hal/timers.o
 
 .PHONY: clean-source-2f-hal
 

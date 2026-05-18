@@ -27,9 +27,10 @@
  ******************************************************************************/
 
 #define MAXCHAR 4
-#define MINTIMEELAPSED 50 // ms
 
-#define MAXTIMEELAPSED 2000 // ms
+#define MIN_TIME_ELAPSED 50 // ms
+
+#define MAX_TIME_ELAPSED 2000 // ms
 
 /*******************************************************************************
  * FUNCTION PROTOTYPES FOR PRIVATE FUNCTIONS WITH FILE LEVEL SCOPE
@@ -46,6 +47,10 @@ AccelAngles_t angles;      // Para roll y pitch en grados
 
 
 char val_ascii[MAXCHAR];        // Buffer para conversión numérica
+
+timer_t timer_50ms = {.startMillis = 0, .started = false};
+timer_t timer_2000ms = {.startMillis = 0, .started = false};
+
 
 
 typedef struct 
@@ -65,49 +70,22 @@ position_t posGrupos[4] = {
 void App_Init(void) {
 	Accel_Init();
 	USBCom_Init();
-	__enable_irq();
-	// --- TEST: Enviar mensaje desde la Freedom a la PC ---
-	USBCom_SendString("\r\n*********************************\r\n");
-	USBCom_SendString("   FRDM-K64F: USB READY (9600)\r\n");
-	USBCom_SendString("*********************************\r\n");
+	initTimers();
+	initSystem(20);		// 20Hz == 50ms por cada interrupcion
+
+	timerStart(&timer_50ms);
+	timerStart(&timer_2000ms);
 }
 
-/* Función que se llama constantemente en un ciclo infinito */
+
 void App_Run(void) {
-
-
-	/*************************************
-	 *
-	 * 			TEST UART
-	 *
-	 ************************************/
-
-
-	// El programa se queda aquí esperando un byte
-	/*unsigned char dato = UART_Receive_Data();
-
-	if (dato == 'A' || dato == 'a') {
-		// Caso Correcto
-		UART_SendString("' -> RESULTADO: CORRECTO\r\n");
-	} else {
-		// Caso Incorrecto
-		UART_SendString("' -> RESULTADO: INCORRECTO\r\n");
-	}
-
-	UART_SendString("Intenta de nuevo: ");*/
-
-	/*************************************
-	 *
-	 * 	TEST ACELEROMETRO CON I2C
-	 *
-	 ************************************/
 
 	if (Accel_StartCapture()) 
 	{
 		// Mientras esto ocurre, las interrupciones llenan el buffer en background
 		while (!Accel_IsDataReady()) 
 		{
-			if (CANReceived())
+			/*if (CANReceived())
 			{
 				if (isMsgPosition())
 				{
@@ -167,75 +145,52 @@ void App_Run(void) {
 							break;
 					}
 				}
-			}
+			}*/
 		}
 
 	}
 
+
+
 	Accel_GetProcessedData(&rawValues);
 	Accel_CalculateAngles(&rawValues, &angles);
-	if ( (((angles.roll > (ascii_to_int(posGrupos[3].roll) + 5) || angles.roll < (ascii_to_int(posGrupos[3].roll) - 5)) && true) || false) ) 
+
+
+
+	bool timer_50ms_finished = timerCheck(&timer_50ms) >= MIN_TIME_ELAPSED / 50;
+	bool timer_2000ms_finished = timerCheck(&timer_2000ms) >= MAX_TIME_ELAPSED / 50;
+
+
+	if ( (((angles.roll > (ascii_to_int(posGrupos[3].roll) + 5) || angles.roll < (ascii_to_int(posGrupos[3].roll) - 5)) && timer_50ms_finished) || timer_2000ms_finished) )
 	{
-		USBCom_SendString(">S3,A1,V"); // Rolido: Estación 3, Ángulo 1
+		timerReset(&timer_50ms);
+		timerReset(&timer_2000ms);
+
+		USBCom_SendString(">S3,A0,V"); // Rolido: Estación 3, Ángulo 0
 		int_to_ascii((int)angles.roll, posGrupos[3].roll);
 		USBCom_SendString(posGrupos[3].roll);
 		USBCom_SendString("\n"); // Fin de trama
-		sendCAN(posGrupos[3].roll, 'R', sizeof(posGrupos[3].roll)/sizeof(posGrupos[3].roll[0]));
+		// sendCAN(posGrupos[3].roll, 'R', sizeof(posGrupos[3].roll)/sizeof(posGrupos[3].roll[0]));
 	}
-	if ( (((angles.pitch > (ascii_to_int(posGrupos[3].pitch) + 5) || angles.pitch < (ascii_to_int(posGrupos[3].pitch) - 5)) && true) || false) ) // falta chequear el tiempo
+	if ( (((angles.pitch > (ascii_to_int(posGrupos[3].pitch) + 5) || angles.pitch < (ascii_to_int(posGrupos[3].pitch) - 5)) && timer_50ms_finished) || timer_2000ms_finished) ) // falta chequear el tiempo
 	{
-		USBCom_SendString(">S3,A0,V"); // Pitch: Estación 3, Ángulo 0
+		timerReset(&timer_50ms);
+		timerReset(&timer_2000ms);
+
+		USBCom_SendString(">S3,A1,V"); // Pitch: Estación 3, Ángulo 1
 		int_to_ascii((int)angles.pitch, posGrupos[3].pitch);
 		USBCom_SendString(posGrupos[3].pitch);
 		USBCom_SendString("\n"); // Fin de trama
-		sendCAN(posGrupos[3].pitch, 'C', sizeof(posGrupos[3].pitch)/sizeof(posGrupos[3].pitch[0]));
+		// sendCAN(posGrupos[3].pitch, 'C', sizeof(posGrupos[3].pitch)/sizeof(posGrupos[3].pitch[0]));
 	}
+	/*if (timer_50ms_finished) {
+		timerReset(&timer_50ms);
+	}
+	if (timer_50ms_finished) {
+		timerReset(&timer_2000ms);
+	}*/
 
-	/*************************************
-	 *
-	 * 	LECTURA EN EL PUERTO DE LA PC
-	 *
-	 ************************************/
 	
-	/*
-	// --- IMPRIMIR roll ---
-	UART_SendString("roll: ");
-	int_to_ascii((int)angles.roll, val_ascii);
-	UART_SendString(val_ascii);
-	UART_SendString(" deg | ");
-
-	// --- IMPRIMIR pitch ---
-	UART_SendString("pitch: ");
-	int_to_ascii((int)angles.pitch, val_ascii);
-	UART_SendString(val_ascii);
-	UART_SendString(" deg");
-
-	// --- NUEVA LINEA ---
-	UART_SendString("\r\n");
-	}
-	// Delay para que la terminal sea legible
-	for(volatile int i = 0; i < 5000000; i++);
-	*/
-
-
-	/*************************************
-	 *
-	 * 	LECTURA EN LA APP DE PYTHON
-	 *
-	 ************************************/
-	// --- ENVIAR roll (angle 0) ---
-	/*
-	UART_SendString(">S0,A0,V"); // Cabecera: Estación 0, Ángulo 0
-	int_to_ascii((int)angles.roll, val_ascii);
-	UART_SendString(val_ascii);
-	UART_SendString("\n"); // Fin de trama
-
-	// --- ENVIAR pitch (angle 1) ---
-	UART_SendString(">S0,A1,V"); // Cabecera: Estación 0, Ángulo 1
-	int_to_ascii((int)angles.pitch, val_ascii);
-	UART_SendString(val_ascii);
-	UART_SendString("\n"); // Fin de trama
-	*/
 }	
 
 

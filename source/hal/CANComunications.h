@@ -1,7 +1,7 @@
 #ifndef _CANCOMUNICATIONS_H_
 #define _CANCOMUNICATIONS_H_
 
-#include "can.h"
+#include "mcal/can.h"
 #include <stdint.h>
 #include <stdbool.h>
 

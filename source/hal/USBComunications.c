@@ -6,9 +6,8 @@ void USBCom_Init(void)
     UART_Init();
 }
 
-unsigned char USBCom_Receive_Data(void)
-{
-    return UART_Receive_Data();
+bool USBCom_GetByte(uint8_t *byte) {
+    return UART_Receive_Data(byte);
 }
 
 void USBCom_SendString(char* str)

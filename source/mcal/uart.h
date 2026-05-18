@@ -34,7 +34,14 @@
  ******************************************************************************/
 
 void UART_Init(void);
-unsigned char UART_Receive_Data(void);
+
+/**
+ * @brief Lee un byte del buffer de RAM de forma NO BLOQUEANTE.
+ * @param byte Puntero donde se guardará el dato si está disponible.
+ * @return true si se leyó un byte con éxito, false si el buffer estaba vacío.
+ */
+bool UART_Receive_Data(uint8_t *byte);
+
 void UART_SendString(char* str);
 
 

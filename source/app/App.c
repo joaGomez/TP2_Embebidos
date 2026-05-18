@@ -85,7 +85,27 @@ void App_Run(void) {
 		// Mientras esto ocurre, las interrupciones llenan el buffer en background
 		while (!Accel_IsDataReady()) 
 		{
-			/*if (CANReceived())
+			uint8_t rx_led_byte;
+			if (USBCom_GetByte(&rx_led_byte)) {
+				// Validar estructura binaria (1JKL 0RGB)
+				if ((rx_led_byte & 0x80) && !(rx_led_byte & 0x08)) {
+					uint8_t target_group = (rx_led_byte >> 4) & 0x07;
+
+					if (target_group == 3) { // ID de tu propia mesa/estación
+						// Controlar hardware local
+						uint8_t r = (rx_led_byte >> 2) & 0x01;
+						uint8_t g = (rx_led_byte >> 1) & 0x01;
+						uint8_t b = rx_led_byte & 0x01;
+
+						// TODO: Código para setear los leds de nuestra placa
+
+					}
+					else {
+						sendCAN(&rx_led_byte, 'L', 1);
+					}
+				}
+			}
+			if (CANReceived())
 			{
 				if (isMsgPosition())
 				{
@@ -145,9 +165,8 @@ void App_Run(void) {
 							break;
 					}
 				}
-			}*/
+			}
 		}
-
 	}
 
 
@@ -181,16 +200,8 @@ void App_Run(void) {
 		int_to_ascii((int)angles.pitch, posGrupos[3].pitch);
 		USBCom_SendString(posGrupos[3].pitch);
 		USBCom_SendString("\n"); // Fin de trama
-		// sendCAN(posGrupos[3].pitch, 'C', sizeof(posGrupos[3].pitch)/sizeof(posGrupos[3].pitch[0]));
+		sendCAN(posGrupos[3].pitch, 'C', sizeof(posGrupos[3].pitch)/sizeof(posGrupos[3].pitch[0]));
 	}
-	/*if (timer_50ms_finished) {
-		timerReset(&timer_50ms);
-	}
-	if (timer_50ms_finished) {
-		timerReset(&timer_2000ms);
-	}*/
-
-	
 }	
 
 

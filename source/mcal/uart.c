@@ -108,13 +108,20 @@ void UART_Send_Data(uint8_t data) {
     UART0->C2 |= UART_C2_TIE_MASK;
 }
 
-// Recibe datos: Los saca del buffer de RAM
-uint8_t UART_Receive_Data(void) {
-    while (rx_buffer.head == rx_buffer.tail); // Esperar a que llegue algo a la RAM
 
-    uint8_t data = rx_buffer.data[rx_buffer.tail];
+bool UART_Receive_Data(uint8_t *byte) {
+    // Si la cabeza y la cola coinciden, la interrupción no guardó nada nuevo
+    if (rx_buffer.head == rx_buffer.tail) {
+        return false; // Salimos inmediatamente sin bloquear el flujo
+    }
+
+    // Extraemos el dato apuntado por la cola (tail)
+    *byte = rx_buffer.data[rx_buffer.tail];
+    
+    // Avanzamos la cola de forma circular
     rx_buffer.tail = (rx_buffer.tail + 1) % BUF_SIZE;
-    return data;
+    
+    return true; // Avisamos que devolvimos un dato válido
 }
 
 void UART_SendString(char* str) {
@@ -127,6 +134,15 @@ void UART_SendString(char* str) {
 
 void UART0_RX_TX_IRQHandler(void) {
     uint8_t s1 = UART0->S1;
+
+    // --- AGREGADO DE SEGURIDAD ---
+    // Si hay flags de error activos (OR: Overrun, NF: Ruido, FE: Framing, PF: Paridad)
+    if (s1 & (UART_S1_OR_MASK | UART_S1_NF_MASK | UART_S1_FE_MASK | UART_S1_PF_MASK)) {
+        // En los Kinetis, los flags de error de S1 se limpian leyendo S1 (ya lo hiciste arriba)
+        // y luego realizando una lectura "dummy" del registro de datos D.
+        volatile uint8_t dummy_read = UART0->D;
+        (void)dummy_read; // Evita el warning de variable no usada
+    }
 
     // CASO 1: Recepción (El FIFO de RX alcanzó el Watermark)
     if (s1 & UART_S1_RDRF_MASK) {

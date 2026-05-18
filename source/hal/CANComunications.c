@@ -103,9 +103,9 @@ uint8_t USBUpdate(char * CANData, char * CANDataType){
 
 
 
-    for(uint8_t k=0; k < cant0; k++){
+    /*for(uint8_t k=0; k < cant0; k++){
         CANData[i++] = '0';
-    }
+    }*/
 
     while(j<msglength) {
     	CANData[i++]= msg[j];
@@ -115,6 +115,7 @@ uint8_t USBUpdate(char * CANData, char * CANDataType){
     for(j; j< msglength; j++){
         CANData[i++]= msg[j];
     }
+    CANData[i] = '\0';
 
     uint8_t group = (uint8_t)(id & CAN_GROUP_MASK);
 
@@ -128,7 +129,7 @@ bool SendCAN(char * CANData, char CANDataType, uint8_t size){
 
     if (CANDataType == 'L')
     {
-        return CAN0_WriteMessage(MY_ID, (uint8_t*)CANData , size);
+        return CAN0_WriteMessage(MY_ID, (uint8_t*)CANData , 1);
     }
     
 

@@ -14,7 +14,7 @@
 #include "hal/system.h"
 #include "hal/timers.h"
 #include "hal/accel.h"
-
+#include <string.h>
 #include "hal/USBComunications.h"
 #include "hal/CANComunications.h"
 #include "hardware.h"
@@ -27,7 +27,7 @@
  * CONSTANT AND MACRO DEFINITIONS USING #DEFINE
  ******************************************************************************/
 
-#define MAXCHAR 4
+#define MAXCHAR 5
 
 #define MIN_TIME_ELAPSED 50 // ms
 
@@ -64,10 +64,10 @@ typedef struct
 } position_t;
 
 position_t posGrupos[4] = {
-	{{'0','0','0','0'}, {'0','0','0','0'}, {'0','0','0','0'}},
-	{{'0','0','0','0'}, {'0','0','0','0'}, {'0','0','0','0'}},
-	{{'0','0','0','0'}, {'0','0','0','0'}, {'0','0','0','0'}},
-	{{'0','0','0','0'}, {'0','0','0','0'}, {'0','0','0','0'}}
+	{{'0','0','0','0', '\0'}, {'0','0','0','0', '\0'}, {'0','0','0','0', '\0'}},
+	{{'0','0','0','0', '\0'}, {'0','0','0','0', '\0'}, {'0','0','0','0', '\0'}},
+	{{'0','0','0','0', '\0'}, {'0','0','0','0', '\0'}, {'0','0','0','0', '\0'}},
+	{{'0','0','0','0', '\0'}, {'0','0','0','0', '\0'}, {'0','0','0','0', '\0'}}
 }; // Nombre de grupo - 1
 
 void App_Init(void) {
@@ -229,7 +229,7 @@ void App_Run(void) {
 	bool timerC_2000ms_finished = timerCheck(&timerC_2000ms) >= MAX_TIME_ELAPSED / 50;
 
 
-	if ( (((angles.roll > (ascii_to_int(posGrupos[3].roll) + 5) || angles.roll < (ascii_to_int(posGrupos[3].roll) - 5)) && timerR_50ms_finished) || timerR_2000ms_finished) )
+	if ( (((angles.roll > (ascii_to_int(posGrupos[4].roll) + 5) || angles.roll < (ascii_to_int(posGrupos[4].roll) - 5)) && timerR_50ms_finished) || timerR_2000ms_finished) )
 	{
 		timerReset(&timerR_50ms);
 		timerReset(&timerR_2000ms);
@@ -238,7 +238,7 @@ void App_Run(void) {
 		int_to_ascii((int)angles.roll, posGrupos[4].roll);
 		USBCom_SendString(posGrupos[4].roll);
 		USBCom_SendString("\n"); // Fin de trama
-		SendCAN(posGrupos[4].roll, 'R', sizeof(posGrupos[4].roll)/sizeof(posGrupos[4].roll[0]));
+		SendCAN(posGrupos[4].roll, 'R', strlen(posGrupos[4].roll));
 	}
 	if ( (((angles.pitch > (ascii_to_int(posGrupos[4].pitch) + 5) || angles.pitch < (ascii_to_int(posGrupos[4].pitch) - 5)) && timerC_50ms_finished) || timerC_2000ms_finished) ) // falta chequear el tiempo
 	{
@@ -249,9 +249,9 @@ void App_Run(void) {
 		int_to_ascii((int)angles.pitch, posGrupos[4].pitch);
 		USBCom_SendString(posGrupos[4].pitch);
 		USBCom_SendString("\n"); // Fin de trama
-		SendCAN(posGrupos[4].pitch, 'C', sizeof(posGrupos[4].pitch)/sizeof(posGrupos[4].pitch[0]));
+		SendCAN(posGrupos[4].pitch, 'C', strlen(posGrupos[4].pitch));
 	}
-}	
+}
 
 
 /*******************************************************************************

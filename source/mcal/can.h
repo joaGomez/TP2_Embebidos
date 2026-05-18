@@ -19,8 +19,8 @@
 #define GRUPO_NUM 4
 #define MY_ID (0x100 + GRUPO_NUM) // 0x104
 
-#define CAN_BAUDRATE    125000     // 125 kHz
-#define TOTAL_TQ    16         // Cuántos Tq sumaste (1+3+6+6)
+#define CAN_BAUDRATE    125000U     // 125 kHz
+#define TOTAL_TQ    16U         // Cuántos Tq sumaste (1+3+6+6)
 
 
 /*******************************************************************************

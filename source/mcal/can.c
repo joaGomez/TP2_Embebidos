@@ -6,23 +6,27 @@
 #define PIN_CAN0_TX    PORTNUM2PIN(PB, 18)
 #define PIN_CAN0_RX    PORTNUM2PIN(PB, 19)
 
-#define PRESDIV ((__CORE_CLOCK__ / (CAN_BAUDRATE * TOTAL_TQ)) - 1)
+#define PRESDIV (((__CORE_CLOCK__) / ((CAN_BAUDRATE) * (TOTAL_TQ))) - 1)
 
 bool CAN_Init(void) {
-	gpioInit(PIN_CAN0_TX, PORT_mAlt2);
+	
+    SIM->SCGC6 |= SIM_SCGC6_FLEXCAN0_MASK;
+    
+    gpioInit(PIN_CAN0_TX, PORT_mAlt2);
 	gpioInit(PIN_CAN0_RX, PORT_mAlt2);
 
 	//CAN0->MCR &= ~(CAN_MCR_MDIS(1));		// Enables FLEXCAN
+    CAN0->MCR |= CAN_MCR_MDIS_MASK;
+    CAN0->CTRL1 |= CAN_CTRL1_CLKSRC(1);
 
-	CAN0->MCR = CAN_MCR_MDIS(0) | 
-                CAN_MCR_FRZ(1)  | 
-                CAN_MCR_HALT(1) | 
-                CAN_MCR_MAXMB(15) |
+	CAN0->MCR = CAN_MCR_FRZ(1)        | 
+                CAN_MCR_HALT(1)       | 
+                CAN_MCR_MAXMB(15)     | 
                 CAN_MCR_SRXDIS(1);
 
 
 	
-
+    while (CAN0->MCR & CAN_MCR_LPMACK_MASK);
     while (!(CAN0->MCR & CAN_MCR_FRZACK_MASK));
 
 
@@ -31,20 +35,20 @@ bool CAN_Init(void) {
                   CAN_CTRL1_PSEG1(5)     		| // 6 Tq (Fase 1)
                   CAN_CTRL1_PSEG2(5)     		| // 6 Tq (Fase 2)
                   CAN_CTRL1_RJW(1)       		| // Salto de resincronización (2 Tq)
-                  CAN_CTRL1_CLKSRC_MASK; 
+                  CAN_CTRL1_CLKSRC(1);
 
 	
 
 	CAN0->RXMGMASK = CAN_RXMGMASK_MG(CAN_ID_STD(0x7F8));
 
-
+    CAN0->MB[0].CS = CAN_CS_CODE(8);
 
 	CAN0->MB[1].ID = CAN_ID_STD(0x100); 
     CAN0->MB[1].CS = CAN_CS_CODE(4);   
 
     
     for (int i = 2; i < 16; i++) {
-        CAN0->MB[i].CS = 0;
+        CAN0->MB[i].CS = CAN_CS_CODE(0);
     }
 
 	
@@ -56,7 +60,7 @@ bool CAN_Init(void) {
 	CAN0->MCR &= ~(CAN_MCR_HALT_MASK | CAN_MCR_FRZ_MASK);
 
     while (CAN0->MCR & CAN_MCR_FRZACK_MASK);
-	return false;
+	return true;
 }
 
 
@@ -68,8 +72,8 @@ bool CAN0_WriteMessage(uint32_t id, uint8_t* data, uint8_t size) {
         return false; 
     }
 
-    while( (CAN0->MB[0].CS & CAN_CS_CODE_MASK) != CAN_CS_CODE(8) ); // se podria agregar un timer por si alguna otra placa se cuelga
-
+   
+    CAN0->IFLAG1 = (1 << 0);
     
     CAN0->MB[0].ID = CAN_ID_STD(id);
 	
@@ -109,14 +113,22 @@ void CAN0_ORed_Message_buffer_IRQHandler(void) {
         uint32_t w1 = CAN0->MB[1].WORD1;
         
         datos_recibidos[0] = (uint8_t)(w0 >> 24);
+        datos_recibidos[1] = (uint8_t)(w0 >> 16);
+        datos_recibidos[2] = (uint8_t)(w0 >> 8);
+        datos_recibidos[3] = (uint8_t)(w0);
+        datos_recibidos[4] = (uint8_t)(w1 >> 24);
+        datos_recibidos[5] = (uint8_t)(w1 >> 16);
+        datos_recibidos[6] = (uint8_t)(w1 >> 8);
+        datos_recibidos[7] = (uint8_t)(w1);
        
-        
-        nuevo_dato_disponible = true; 
-        
-        CAN0->IFLAG1 = (1 << 1);
-        
-        // 4. DESBLOQUEAR EL MB
+         // 4. DESBLOQUEAR EL MB
         (void)CAN0->TIMER;
+       
+        CAN0->MB[1].CS = CAN_CS_CODE(4);    
+
+        CAN0->IFLAG1 = (1 << 1);
+         nuevo_dato_disponible = true; 
+       
     }
 }
 

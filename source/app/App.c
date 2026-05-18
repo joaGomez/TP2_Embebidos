@@ -97,12 +97,13 @@ void App_Run(void) {
 
 					if (target_group == 3) { // ID de tu propia mesa/estación
 						// Controlar hardware local
-						uint8_t r = (rx_led_byte >> 2) & 0x01;
+						/*uint8_t r = (rx_led_byte >> 2) & 0x01;
 						uint8_t g = (rx_led_byte >> 1) & 0x01;
-						uint8_t b = rx_led_byte & 0x01;
+						uint8_t b = rx_led_byte & 0x01;*/
 
 						// TODO: Código para setear los leds de nuestra placa
-
+						ledOff(WHITE);
+            			ledOn(COLOR(rx_led_byte));
 					}
 					else {
 						sendCAN(&rx_led_byte, 'L', 1);

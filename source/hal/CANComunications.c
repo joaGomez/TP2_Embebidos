@@ -109,6 +109,14 @@ uint8_t USBUpdate(char * CANData, char * CANDataType){
 
 bool SendCAN(char * CANData, char CANDataType, uint8_t size){
     
+
+
+    if (CANDataType == 'L')
+    {
+        return CAN0_WriteMessage(MY_ID, (uint8_t*)CANData , size);
+    }
+    
+
     char angle[size+1];
 
     angle[0] = CANDataType;

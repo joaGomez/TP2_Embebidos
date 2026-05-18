@@ -48,8 +48,10 @@ AccelAngles_t angles;      // Para roll y pitch en grados
 
 char val_ascii[MAXCHAR];        // Buffer para conversión numérica
 
-timer_t timer_50ms = {.startMillis = 0, .started = false};
-timer_t timer_2000ms = {.startMillis = 0, .started = false};
+timer_t timerR_50ms = {.startMillis = 0, .started = false};
+timer_t timerR_2000ms = {.startMillis = 0, .started = false};
+timer_t timerC_50ms = {.startMillis = 0, .started = false};
+timer_t timerC_2000ms = {.startMillis = 0, .started = false};
 
 
 
@@ -73,8 +75,10 @@ void App_Init(void) {
 	initTimers();
 	initSystem(20);		// 20Hz == 50ms por cada interrupcion
 
-	timerStart(&timer_50ms);
-	timerStart(&timer_2000ms);
+	timerStart(&timerR_50ms);
+	timerStart(&timerR_2000ms);
+	timerStart(&timerC_50ms);
+	timerStart(&timerC_2000ms);
 }
 
 
@@ -176,14 +180,16 @@ void App_Run(void) {
 
 
 
-	bool timer_50ms_finished = timerCheck(&timer_50ms) >= MIN_TIME_ELAPSED / 50;
-	bool timer_2000ms_finished = timerCheck(&timer_2000ms) >= MAX_TIME_ELAPSED / 50;
+	bool timer_50ms_finished = timerCheck(&timerR_50ms) >= MIN_TIME_ELAPSED / 50;
+	bool timer_2000ms_finished = timerCheck(&timerR_2000ms) >= MAX_TIME_ELAPSED / 50;
+	bool timer_50ms_finished = timerCheck(&timerC_50ms) >= MIN_TIME_ELAPSED / 50;
+	bool timer_2000ms_finished = timerCheck(&timerC_2000ms) >= MAX_TIME_ELAPSED / 50;
 
 
 	if ( (((angles.roll > (ascii_to_int(posGrupos[3].roll) + 5) || angles.roll < (ascii_to_int(posGrupos[3].roll) - 5)) && timer_50ms_finished) || timer_2000ms_finished) )
 	{
-		timerReset(&timer_50ms);
-		timerReset(&timer_2000ms);
+		timerReset(&timerR_50ms);
+		timerReset(&timerR_2000ms);
 
 		USBCom_SendString(">S3,A0,V"); // Rolido: Estación 3, Ángulo 0
 		int_to_ascii((int)angles.roll, posGrupos[3].roll);
@@ -193,14 +199,14 @@ void App_Run(void) {
 	}
 	if ( (((angles.pitch > (ascii_to_int(posGrupos[3].pitch) + 5) || angles.pitch < (ascii_to_int(posGrupos[3].pitch) - 5)) && timer_50ms_finished) || timer_2000ms_finished) ) // falta chequear el tiempo
 	{
-		timerReset(&timer_50ms);
-		timerReset(&timer_2000ms);
+		timerReset(&timerC_50ms);
+		timerReset(&timerC_2000ms);
 
 		USBCom_SendString(">S3,A1,V"); // Pitch: Estación 3, Ángulo 1
 		int_to_ascii((int)angles.pitch, posGrupos[3].pitch);
 		USBCom_SendString(posGrupos[3].pitch);
 		USBCom_SendString("\n"); // Fin de trama
-		sendCAN(posGrupos[3].pitch, 'C', sizeof(posGrupos[3].pitch)/sizeof(posGrupos[3].pitch[0]));
+		//sendCAN(posGrupos[3].pitch, 'C', sizeof(posGrupos[3].pitch)/sizeof(posGrupos[3].pitch[0]));
 	}
 }	
 

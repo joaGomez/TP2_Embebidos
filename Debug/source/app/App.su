@@ -1,4 +1,4 @@
-../source/app/App.c:70:6:App_Init	8	static
-../source/app/App.c:81:6:App_Run	24	static
-../source/app/App.c:203:6:int_to_ascii	40	static
-../source/app/App.c:225:5:ascii_to_int	32	static
+../source/app/App.c:72:6:App_Init	8	static
+../source/app/App.c:97:6:App_Run	32	static
+../source/app/App.c:236:6:int_to_ascii	40	static
+../source/app/App.c:258:5:ascii_to_int	32	static

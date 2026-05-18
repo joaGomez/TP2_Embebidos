@@ -75,6 +75,18 @@ void App_Init(void) {
 	initTimers();
 	initSystem(20);		// 20Hz == 50ms por cada interrupcion
 
+	if(ledsInit(RED)) {
+		return;
+	}
+	if(ledsInit(GREEN)) {
+		return;
+	}
+	if(ledsInit(BLUE)) {
+		return;
+	}
+
+	ledOn(LEDOFF);
+
 	timerStart(&timerR_50ms);
 	timerStart(&timerR_2000ms);
 	timerStart(&timerC_50ms);
@@ -95,21 +107,24 @@ void App_Run(void) {
 				if ((rx_led_byte & 0x80) && !(rx_led_byte & 0x08)) {
 					uint8_t target_group = (rx_led_byte >> 4) & 0x07;
 
-					if (target_group == 3) { // ID de tu propia mesa/estación
+					if (target_group == 3) {
 						// Controlar hardware local
-						/*uint8_t r = (rx_led_byte >> 2) & 0x01;
+						uint8_t r = (rx_led_byte >> 2) & 0x01;
 						uint8_t g = (rx_led_byte >> 1) & 0x01;
-						uint8_t b = rx_led_byte & 0x01;*/
+						uint8_t b = rx_led_byte & 0x01;
 
-						// TODO: Código para setear los leds de nuestra placa
-						ledOff(WHITE);
-            			ledOn(COLOR(rx_led_byte));
+						uint8_t color_seteado = (r << 2) | (g << 1) | b;
+
+						ledOn(color_seteado);
+
 					}
 					else {
 						sendCAN(&rx_led_byte, 'L', 1);
 					}
 				}
 			}
+
+
 			if (CANReceived())
 			{
 				if (isMsgPosition())
@@ -144,27 +159,27 @@ void App_Run(void) {
 					switch(group)
 					{
 						case 0:
-							USBCom_SendString(">S0,A1,V"); // Rolido: Estación 0, Ángulo 1
+							USBCom_SendString(">S0,A0,V"); // Rolido: Estación 0, Ángulo 1
 							USBCom_SendString(posGrupos[0].roll);
 							USBCom_SendString("\n"); // Fin de trama
-							USBCom_SendString(">S0,A0,V"); // Pitch: Estación 0, Ángulo 0
+							USBCom_SendString(">S0,A1,V"); // Pitch: Estación 0, Ángulo 0
 							USBCom_SendString(posGrupos[0].pitch);
 							USBCom_SendString("\n"); // Fin de trama
 							break;
 						case 1:
-							USBCom_SendString(">S1,A1,V"); // Rolido: Estación 1, Ángulo 1
+							USBCom_SendString(">S1,A0,V"); // Rolido: Estación 1, Ángulo 1
 							USBCom_SendString(posGrupos[1].roll);
 							USBCom_SendString("\n"); // Fin de trama
-							USBCom_SendString(">S1,A0,V"); // Pitch: Estación 1, Ángulo 0
+							USBCom_SendString(">S1,A1,V"); // Pitch: Estación 1, Ángulo 0
 							USBCom_SendString(posGrupos[1].pitch);
 							USBCom_SendString("\n"); // Fin de trama
 							break;
 						default:
 						case 2:
-							USBCom_SendString(">S2,A1,V"); // Rolido: Estación 2, Ángulo 1
+							USBCom_SendString(">S2,A0,V"); // Rolido: Estación 2, Ángulo 1
 							USBCom_SendString(posGrupos[2].roll);
 							USBCom_SendString("\n"); // Fin de trama
-							USBCom_SendString(">S2,A0,V"); // Pitch: Estación 2, Ángulo 0
+							USBCom_SendString(">S2,A1,V"); // Pitch: Estación 2, Ángulo 0
 							USBCom_SendString(posGrupos[2].pitch);
 							USBCom_SendString("\n"); // Fin de trama
 							break;
@@ -181,13 +196,13 @@ void App_Run(void) {
 
 
 
-	bool timer_50ms_finished = timerCheck(&timerR_50ms) >= MIN_TIME_ELAPSED / 50;
-	bool timer_2000ms_finished = timerCheck(&timerR_2000ms) >= MAX_TIME_ELAPSED / 50;
-	bool timer_50ms_finished = timerCheck(&timerC_50ms) >= MIN_TIME_ELAPSED / 50;
-	bool timer_2000ms_finished = timerCheck(&timerC_2000ms) >= MAX_TIME_ELAPSED / 50;
+	bool timerR_50ms_finished = timerCheck(&timerR_50ms) >= MIN_TIME_ELAPSED / 50;
+	bool timerR_2000ms_finished = timerCheck(&timerR_2000ms) >= MAX_TIME_ELAPSED / 50;
+	bool timerC_50ms_finished = timerCheck(&timerC_50ms) >= MIN_TIME_ELAPSED / 50;
+	bool timerC_2000ms_finished = timerCheck(&timerC_2000ms) >= MAX_TIME_ELAPSED / 50;
 
 
-	if ( (((angles.roll > (ascii_to_int(posGrupos[3].roll) + 5) || angles.roll < (ascii_to_int(posGrupos[3].roll) - 5)) && timer_50ms_finished) || timer_2000ms_finished) )
+	if ( (((angles.roll > (ascii_to_int(posGrupos[3].roll) + 5) || angles.roll < (ascii_to_int(posGrupos[3].roll) - 5)) && timerR_50ms_finished) || timerR_2000ms_finished) )
 	{
 		timerReset(&timerR_50ms);
 		timerReset(&timerR_2000ms);
@@ -198,7 +213,7 @@ void App_Run(void) {
 		USBCom_SendString("\n"); // Fin de trama
 		// sendCAN(posGrupos[3].roll, 'R', sizeof(posGrupos[3].roll)/sizeof(posGrupos[3].roll[0]));
 	}
-	if ( (((angles.pitch > (ascii_to_int(posGrupos[3].pitch) + 5) || angles.pitch < (ascii_to_int(posGrupos[3].pitch) - 5)) && timer_50ms_finished) || timer_2000ms_finished) ) // falta chequear el tiempo
+	if ( (((angles.pitch > (ascii_to_int(posGrupos[3].pitch) + 5) || angles.pitch < (ascii_to_int(posGrupos[3].pitch) - 5)) && timerC_50ms_finished) || timerC_2000ms_finished) ) // falta chequear el tiempo
 	{
 		timerReset(&timerC_50ms);
 		timerReset(&timerC_2000ms);

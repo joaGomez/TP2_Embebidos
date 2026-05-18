@@ -23,25 +23,15 @@ static RingBuffer_t rx_buffer = {{0}, 0, 0};
 static RingBuffer_t tx_buffer = {{0}, 0, 0};
 
 
-
-
 void UART_Init (void)
 {
     // Habilitar Clocks de Puertos y Periféricos
-    // Cualquier acceso a bus con clock deshabilitado genera error termination.
-
     gpioInit(PIN_UART0_TX, PORT_mAlt3);
     gpioInit(PIN_UART0_RX, PORT_mAlt3);
 
     SIM->SCGC4 |= SIM_SCGC4_UART0_MASK;
     SIM->SCGC4 |= SIM_SCGC4_UART1_MASK;
 
-    // Configuración de Pines (Mux Alt3 para UART0)
-    //PORTB->PCR[UART0_TX_PIN] = 0x0;
-    //PORTB->PCR[UART0_TX_PIN] |= PORT_PCR_MUX(PORT_mAlt3);
-
-    //PORTB->PCR[UART0_RX_PIN] = 0x0;
-    //PORTB->PCR[UART0_RX_PIN] |= PORT_PCR_MUX(PORT_mAlt3);
 
     PORTB->PCR[PIN2NUM(PIN_UART0_RX)] |= PORT_PCR_IRQC(PORT_eDisabled);
     PORTB->PCR[PIN2NUM(PIN_UART0_TX)] |= PORT_PCR_IRQC(PORT_eDisabled);
@@ -60,7 +50,8 @@ void UART_Init (void)
     UART0->PFIFO |= (UART_PFIFO_TXFE_MASK | UART_PFIFO_RXFE_MASK);
 
     // Watermarks
-    UART0->RWFIFO = 4; // Interrumpir cuando haya 4 bytes acumulados en RX
+    UART0->RWFIFO = 1; // Interrumpir cuando haya 1 byte acumulado en RX  
+                       // Sino necesito enviar varias veces la data de los leds
     UART0->TWFIFO = 2; // Interrumpir cuando queden 2 espacios o menos en TX
 
     // Limpiar (Flush) FIFOs para descartar basura previa
